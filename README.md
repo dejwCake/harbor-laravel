@@ -168,9 +168,13 @@ In this section you can find all commands supported by harbor:
 
 `harbor csf` will run php code style fix on new php container. All additional arguments are passed to command.
 
-`harbor csc` will run php code compatibility check on new php container. All additional arguments are passed to command.
+`harbor pst` will run php stan on new php container. All additional arguments are passed to command.
 
-`harbor compn` will run php composer normalisation on new php container. All additional arguments are passed to command.
+`harbor pmd` will run php mass detector on new php container with argument with list of dirs. All additional arguments are passed to command.
+
+`harbor cmp` will run php code compatibility check on new php container. All additional arguments are passed to command.
+
+`harbor cn` will run php composer normalisation on new php container. All additional arguments are passed to command.
 
 #### NPM container commands ####
 

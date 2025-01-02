@@ -530,12 +530,34 @@ main() {
             ${COMPOSE} run --rm php-qa phpcbf -s --colors --extensions=php "$@"
             ;;
 
-        csc)
+        phpstan|pst)
+            shift 1
+            ${COMPOSE} run --rm php-qa phpstan analyse --configuration=phpstan.neon "$@"
+            ;;
+
+        phpmd|pmd)
+            shift 1
+            DIRS=$1
+            shift 1
+            ${COMPOSE} run --rm php-qa phpmd ${DIRS} ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml "$@"
+            ;;
+
+        deptrac|dpt)
+            shift 1
+            ${COMPOSE} run --rm php-qa deptrac analyze "$@"
+            ;;
+
+        rector)
+            shift 1
+            ${COMPOSE} run --rm php-qa rector "$@"
+            ;;
+
+        compatibility|cmp)
             shift 1
             ${COMPOSE} run --rm php-qa phpcs --standard=.phpcs.compatibility.xml --cache=.phpcs.cache "$@"
             ;;
 
-        composer-normalize|compn)
+        composer-normalize|cn)
             shift 1
             ${COMPOSE} run --rm php-qa composer normalize "$@"
             ;;
