@@ -12,7 +12,7 @@ services:
     restart: on-failure
 
   php:
-    image: dejwcake/php${HARBOR_PHP_VERSION:-8.2}:${HARBOR_PHP_CONTAINER_VERSION:-1}
+    image: dejwcake/php${HARBOR_PHP_VERSION:-8.4}:${HARBOR_PHP_CONTAINER_VERSION:-1}
     environment:
       APP_ENV: "${APP_ENV:-local}"
       XDEBUG_HOST: "${HARBOR_XDEBUG_HOST:-host.docker.internal}"
@@ -34,17 +34,22 @@ services:
       - redis
     restart: on-failure
 
-  db:
-    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-15}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
-    ports:
-      - "${HARBOR_DB_PORT:-5432}:${HARBOR_DB_PORT:-5432}"
-    environment:
-      POSTGRES_DB: "${DB_DATABASE:-laravel}"
-      POSTGRES_USER: "${DB_USERNAME:-root}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-bestsecret}"
-      PGPASSWORD: "${DB_PASSWORD:-bestsecret}"
+  php-qa:
+    image: dejwcake/phpqa${HARBOR_PHP_QA_VERSION:-8.4}:${HARBOR_PHP_QA_CONTAINER_VERSION:-1}
     volumes:
-      - db-data:${HARBOR_DB_DATA_PATH:-/var/lib/postgresql/data}
+      - .:/var/www/html:delegated
+
+  db:
+    image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-11.6}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
+    ports:
+      - "${HARBOR_DB_PORT:-3306}:${HARBOR_DB_PORT:-3306}"
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE:-laravel}"
+      MYSQL_USER: "${DB_USERNAME:-root}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+    volumes:
+      - db-data:${HARBOR_DB_DATA_PATH:-/usr/local/lib/mysql}
       - ./.harbor/db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:cached
       - ./.harbor/db/export:/export:delegated
       - ./.harbor/db/import:/import:cached
@@ -53,14 +58,14 @@ services:
     restart: on-failure
 
   db-testing:
-    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-15}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
+    image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-11.6}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
     ports:
-      - "${HARBOR_DB_TESTING_PORT:-5433}:${HARBOR_DB_PORT:-5432}"
+      - "${HARBOR_DB_TESTING_PORT:-3307}:${HARBOR_DB_PORT:-3306}"
     environment:
-      POSTGRES_DB: "${DB_DATABASE:-laravel}"
-      POSTGRES_USER: "${DB_USERNAME:-root}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD:-bestsecret}"
-      PGPASSWORD: "${DB_PASSWORD:-bestsecret}"
+      MYSQL_DATABASE: "${DB_DATABASE:-laravel}"
+      MYSQL_USER: "${DB_USERNAME:-root}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-bestsecret}"
     volumes:
       - ./.harbor/db-testing/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:cached
     networks:
@@ -76,7 +81,7 @@ services:
     restart: on-failure
 
   node:
-    image: dejwcake/node${HARBOR_NODE_VERSION:-18}:${HARBOR_NODE_CONTAINER_VERSION:-1}
+    image: dejwcake/node${HARBOR_NODE_VERSION:-22}:${HARBOR_NODE_CONTAINER_VERSION:-1}
     user: node
     volumes:
       - .:/var/www/html:delegated

@@ -9,27 +9,32 @@
 #  php:
   # Add your own php configuration here
 
+#  php-qa:
+  # Add your own php qa configuration here
+
 #  db:
   # Add your own db configuration here
-  # For mysql use:
-#    image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-10.5}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
+  # For postgres use:
+#    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-17}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
 #    environment:
-#      MYSQL_DATABASE: "${DB_DATABASE:-laravel}"
-#      MYSQL_USER: "${DB_USERNAME:-root}"
-#      MYSQL_PASSWORD: "${DB_PASSWORD:-bestsecret}"
-#      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+#      POSTGRES_DB: "${DB_DATABASE:-laravel}"
+#      POSTGRES_USER: "${DB_USERNAME:-root}"
+#      POSTGRES_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+#      PGPASSWORD: "${DB_PASSWORD:-bestsecret}"
+#    volumes:
+#     - db-data:${HARBOR_DB_DATA_PATH:-/var/lib/postgresql/data}:delegated
 
 #  db-testing:
   # Add your own db-testing configuration here
-  # For mysql use:
-#    image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-10.5}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
+  # For postgres use:
+#    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-17}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
 #    environment:
-#      MYSQL_DATABASE: "${DB_DATABASE:-laravel}"
-#      MYSQL_USER: "${DB_USERNAME:-root}"
-#      MYSQL_PASSWORD: "${DB_PASSWORD:-bestsecret}"
-#      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+#      POSTGRES_DB: "${DB_DATABASE:-laravel}"
+#      POSTGRES_USER: "${DB_USERNAME:-root}"
+#      POSTGRES_PASSWORD: "${DB_PASSWORD:-bestsecret}"
+#      PGPASSWORD: "${DB_PASSWORD:-bestsecret}"
 #    volumes:
-#     - db-testing-data:${HARBOR_DB_DATA_PATH:-/var/lib/mysql}:delegated
+#     - db-testing-data:${HARBOR_DB_DATA_PATH:-/var/lib/postgresql/data}:delegated
 
 #  redis:
   # Add your own redis configuration here

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 TYPE=php
-VERSION=3.0.3
+VERSION=4.0.0
 
 # making harbor command available
 chmod +x ./harbor
@@ -394,11 +394,9 @@ craftable() {
     setCraftableStability
 
     echo "Require craftable"
-#    ${COMPOSE} run --rm php composer require "brackets/craftable"
     ${COMPOSE} run --rm php composer require psr/http-message:1.1
     ${COMPOSE} run --rm php composer require dejwcake/craftable
     echo "Require admin-generator"
-#    ${COMPOSE} run --rm php composer require --dev "brackets/admin-generator"
     ${COMPOSE} run --rm php composer require --dev dejwcake/admin-generator
 
     echo "Craftable installed, initializing ..."
@@ -520,6 +518,26 @@ main() {
             ${COMPOSE} run --rm \
                 php \
                 ./vendor/bin/phpunit "$@"
+            ;;
+
+        css)
+            shift 1
+            ${COMPOSE} run --rm php-qa phpcs -s --colors --extensions=php "$@"
+            ;;
+
+        csf)
+            shift 1
+            ${COMPOSE} run --rm php-qa phpcbf -s --colors --extensions=php "$@"
+            ;;
+
+        csc)
+            shift 1
+            ${COMPOSE} run --rm php-qa phpcs --standard=.phpcs.compatibility.xml --cache=.phpcs.cache "$@"
+            ;;
+
+        composer-normalize|compn)
+            shift 1
+            ${COMPOSE} run --rm php-qa composer normalize "$@"
             ;;
 
         #

@@ -4,6 +4,7 @@ This harbor provides docker configuration for your project. It is based on vesse
  
 * nginx container, 
 * php container, 
+* php qa container, 
 * db container, 
 * testing db container,
 * node container,
@@ -13,11 +14,15 @@ This script handles the current instance. To create new, install or update harbo
 
 ## Upgrade guide ##
 
-### From 2.0 to 3.0 ###
+### From 3 to 4 ###
 
-Harbor 3.0 has been completely rewritten from Harbor 2.0. It is using prebuild docker images. Therefore, the upgrade have to be done manually.
+As Harbor 4 uses the same structure and files as v3, so the upgrade is simple. The main difference is in used versions and that by default it uses mariad/mysql instead of postgres. If you want to use postgres, you have to modify the `docker-compose.override.yml` file and `.env.harbor` file. Also, PHP QA image has been added, so now on you can check your code with PHP QA tools.
 
-1. backup all data from `pgsql` container, you can use `./harbor pg_dump` command. In version 3.0 container has a different name and volume, so you have to move data if needed. In case of no important data, just skip this step. 
+### From 2 to 3 ###
+
+Harbor 3 has been completely rewritten from Harbor 2. It is using prebuild docker images. Therefore, the upgrade have to be done manually.
+
+1. backup all data from `pgsql` container, you can use `./harbor pg_dump` command. In version 3 container has a different name and volume, so you have to move data if needed. In case of no important data, just skip this step. 
 2. stop harbor if running `./harbor stop`
 3. backup `docker` folder and `docker-compose.yml` file. 
 4. remove `docker` folder, `docker-compose.yml`, `harbor`, `harbor-README.md` files.
@@ -43,7 +48,7 @@ Harbor 3.0 has been completely rewritten from Harbor 2.0. It is using prebuild d
 7. change `DB_HOST` env value in `.env` and `.env.example` file to `HARBOR_DB_HOST` env value in `.env.harbor`, probably the value is `db`.
 8. check other env values in `.env.harbor`
 9. remove #docker-config section in `.env` and `.env.example` files
-10. if you use standard `docker-compose.yml` and `Dockerfiles` for images in version 2.0, you can sgo to step 11.
+10. if you use standard `docker-compose.yml` and `Dockerfiles` for images in version 2, you can sgo to step 11.
 11. modify `docker-compose.override.yml` according the backed up `docker-compose.yml` changes you have made. If you need some special changes in Dockerfiles, you can extend provided images and prepare your Dockerfiles used in `docker-compose.override.yml` file.
 12. move folders `docker-entrypoint-initdb.d`, `export` and `import` from your backup docker folder `docker/pgsql` to `.harbor/db`
 13. move folder `docker-entrypoint-initdb.d` from your backup docker folder `docker/testing` to `.harbor/db-testing`
@@ -51,7 +56,7 @@ Harbor 3.0 has been completely rewritten from Harbor 2.0. It is using prebuild d
 15. import backup database data or just run `./harbor art migrate`
 16. now you should have a working harbor, just run `./harbor start`
 
-### From 1.0 to 2.0 ###
+### From 1 to 2 ###
 
 As the containers has been changed, you have to rebuild all the containers and create global volume.
 
@@ -68,42 +73,47 @@ If you need to customize some harbor/docker settings, it is recommended to modif
 Currently supported versions are:
 
 ```
-PHP 7.2 - cannot install laravel/craftable
-PHP 7.3
-PHP 7.4
-PHP 8.0
+PHP 8.1
+PHP 8.2
+PHP 8.3
+PHP 8.4
 
 MariaDB 10.5
+MariaDB 10.6
+MariaDB 10.11
+MariaDB 11.4
+MariaDB 11.6
 
-Postgress 9
-Postgress 10
-Postgress 11
-Postgress 12
+Postgress 13
+Postgress 14
+Postgress 15
+Postgress 16
+Postgress 17
 
-Node 8
-Node 10
-Node 12
+Node 18
+Node 20
+Node 22
 ```
 
 ## Databases ##
 
-Currently, we support only Postgres and MariaDB. By default, Postgres is prepared. To change to MariaDB you have to modify `docker-compose.override.yml` file, the snippet is already there. Just uncomment required parts.
+Currently, we support only MariaDB and Postgres. By default, MariaDB is prepared. To change to Postgres you have to modify `docker-compose.override.yml` file, the snippet is already there. Just uncomment required parts.
 
-In file `.env.harbor` you have to change the config for DB. Comment out Postgres part and uncomment Mariadb part. Example:
+In file `.env.harbor` you have to change the config for DB. Comment out Mysql/Mariadb part and uncomment Postgres part. Example:
 
 ```
+# Mysql/Mariadb
+#HARBOR_DB_CONNECTION=mysql
+#HARBOR_DB_PORT=3306
+#HARBOR_DB_TESTING_PORT=3307
+#HARBOR_DB_DATA_PATH=/usr/local/lib/mysql
+#HARBOR_DB_USER=mysql
 # Postgres
-#HARBOR_DB_CONNECTION=pgsql
-#HARBOR_DB_PORT=5432
-#HARBOR_DB_TESTING_PORT=5433
-#HARBOR_DB_DATA_PATH=/var/lib/postgresql/data
-#HARBOR_DB_USER=postgres
-# Mariadb
-HARBOR_DB_CONNECTION=mysql
-HARBOR_DB_PORT=3306
-HARBOR_DB_TESTING_PORT=3307
-HARBOR_DB_DATA_PATH=/usr/local/lib/mysql
-HARBOR_DB_USER=mysql
+HARBOR_DB_CONNECTION=pgsql
+HARBOR_DB_PORT=5432
+HARBOR_DB_TESTING_PORT=5433
+HARBOR_DB_DATA_PATH=/var/lib/postgresql/data
+HARBOR_DB_USER=postgres
 ```
 
 ## Let's init laravel / craftable ##
@@ -154,17 +164,23 @@ In this section you can find all commands supported by harbor:
 
 `harbor test` will run phpunit tests on new php container. All additional arguments are passed to phpunit.
 
+`harbor css` will run php code style check on new php container. All additional arguments are passed to command.
+
+`harbor csf` will run php code style fix on new php container. All additional arguments are passed to command.
+
+`harbor csc` will run php code compatibility check on new php container. All additional arguments are passed to command.
+
+`harbor compn` will run php composer normalisation on new php container. All additional arguments are passed to command.
+
 #### NPM container commands ####
 
 `harbor npm` will run npm command on node container and pass all additional arguments to npm.
 
-Support for `yarn` and `gulp` has been dropped.
-
 #### DB container commands ####
 
-`harbor db` will run `psql`/`mysql` command on db container with user and host form .env file and pass all additional arguments to `psql`/`mysql` command.
+`harbor db` will run `mysql`/`psql` command on db container with user and host form .env file and pass all additional arguments to `mysql`/`psql` command.
 
-`harbor dump` will run `pg_dump`/`mysqldump` command on db container with user and host form .env file and pass all additional arguments to `pg_dump`/`mysqldump` command.
+`harbor dump` will run `mysqldump`/`pg_dump` command on db container with user and host form .env file and pass all additional arguments to `mysqldump`/`pg_dump` command.
 
 #### Global commands ####
 
