@@ -404,7 +404,6 @@ craftable() {
     setCraftableStability
 
     echo "Require craftable"
-    ${COMPOSE} run --rm php composer require psr/http-message:1.1
     ${COMPOSE} run --rm php composer require dejwcake/craftable
     echo "Require admin-generator"
     ${COMPOSE} run --rm php composer require --dev dejwcake/admin-generator
