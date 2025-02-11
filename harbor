@@ -96,15 +96,15 @@ touchHistory() {
 }
 
 prepareExternalVolumes() {
-    if [[ ! "$(docker volume ls -q | grep empty-node-modules)" ]]; then
+    if [[ ! "$(docker volume ls -q | grep -w empty-node-modules)" ]]; then
         #    echo "empty-node-modules volume does not exist, will be created now."
         docker volume create --driver local empty-node-modules
     fi
-    if [[ ! "$(docker volume ls -q | grep empty-vendor)" ]]; then
+    if [[ ! "$(docker volume ls -q | grep -w empty-vendor)" ]]; then
         #    echo "empty-vendor volume does not exist, will be created now."
         docker volume create --driver local empty-vendor
     fi
-    if [[ ! "$(docker volume ls -q | grep composer-cache)" ]]; then
+    if [[ ! "$(docker volume ls -q | grep -w composer-cache)" ]]; then
         #    echo "composer-cache volume does not exist, will be created now."
         docker volume create --driver local composer-cache
     fi
