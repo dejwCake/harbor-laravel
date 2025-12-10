@@ -139,7 +139,7 @@ testRunningContainers() {
         echo ""
         if echo "$answer" | grep -iq "^y"; then
             echo "Continue ..."
-            ${COMPOSE} down
+            "${COMPOSE[@]}" down
         else
             exit 0
         fi
@@ -172,27 +172,27 @@ rebuild() {
     ./harbor start
 
     # Bring down with optional volume/image removal
-    ${COMPOSE} down ${REMOVE_VOLUMES} ${REMOVE_IMAGES}
+    "${COMPOSE[@]}" down ${REMOVE_VOLUMES} ${REMOVE_IMAGES}
 
     # Pull latest images
-    ${COMPOSE} pull
+    "${COMPOSE[@]}" pull
 
     # Build with any extra args (e.g., --no-cache)
     if [[ ${#EXTRA_ARGS[@]} -gt 0 ]]; then
-        ${COMPOSE} build "${EXTRA_ARGS[@]}"
+        "${COMPOSE[@]}" build "${EXTRA_ARGS[@]}"
     else
-        ${COMPOSE} build
+        "${COMPOSE[@]}" build
     fi
 }
 
 artisan() {
     if [[ "$EXEC" == "yes" ]]; then
-        ${COMPOSE} exec \
+        "${COMPOSE[@]}" exec \
             -u harbor \
             php \
             php artisan "$@"
     else
-        ${COMPOSE} run --rm \
+        "${COMPOSE[@]}" run --rm \
             php \
             php artisan "$@"
     fi
@@ -200,12 +200,12 @@ artisan() {
 
 composer() {
     if [[ "$EXEC" == "yes" ]]; then
-        ${COMPOSE} exec \
+        "${COMPOSE[@]}" exec \
             -u harbor \
             php \
             composer "$@"
     else
-        ${COMPOSE} run --rm \
+        "${COMPOSE[@]}" run --rm \
             php \
             composer "$@"
     fi
@@ -222,11 +222,11 @@ db() {
         return 1
     fi
     if [[ "$EXEC" == "yes" ]]; then
-        ${COMPOSE} exec \
+        "${COMPOSE[@]}" exec \
             db \
             "${DB_COMMAND[@]}" "$@"
     else
-        ${COMPOSE} run --rm \
+        "${COMPOSE[@]}" run --rm \
             db \
             "${DB_COMMAND[@]}" "$@"
     fi
@@ -243,11 +243,11 @@ dump() {
         return 1
     fi
     if [[ "$EXEC" == "yes" ]]; then
-        ${COMPOSE} exec \
+        "${COMPOSE[@]}" exec \
             db \
             "${DB_COMMAND[@]}" "$@"
     else
-        ${COMPOSE} run --rm \
+        "${COMPOSE[@]}" run --rm \
             db \
             "${DB_COMMAND[@]}" "$@"
     fi
@@ -267,12 +267,12 @@ ssh() {
         if [[ "$service" == "php" ]] && [[ "${2:-}" != "root" ]]; then
             user_arg="-u harbor"
         fi
-        ${COMPOSE} exec \
+        "${COMPOSE[@]}" exec \
             ${user_arg} \
             "$service" \
             bash
     else
-        ${COMPOSE} run --rm \
+        "${COMPOSE[@]}" run --rm \
             "$service" \
             bash
     fi
@@ -409,7 +409,7 @@ prepareContainers() {
     ./harbor restart
 
     # Wait for database using helper script provided in images
-    ${COMPOSE} exec db wait-for-active-database.sh
+    "${COMPOSE[@]}" exec db wait-for-active-database.sh
 }
 
 initLaravel() {
@@ -423,7 +423,7 @@ initLaravel() {
     fi
     if [[ -z "${APP_KEY:-}" ]] || [[ "${APP_KEY}" == "SomeRandomString" ]]; then
         echo "Generating APP_KEY ..."
-        if ! ${COMPOSE} run --rm php php artisan key:generate; then
+        if ! "${COMPOSE[@]}" run --rm php php artisan key:generate; then
             echo "Failed to generate APP_KEY via artisan. Please check your Laravel installation."
             exit 1
         fi
@@ -449,7 +449,7 @@ installLaravel() {
     echo "Installing new laravel application to current folder."
 
     # remove all containers and volumes (tolerate if not running)
-    ${COMPOSE} down -v || true
+    "${COMPOSE[@]}" down -v || true
 
     testRunningContainers
 
@@ -457,7 +457,7 @@ installLaravel() {
 
     # use php container to create laravel application
     echo "Creating Laravel application in temporary 'application' folder ..."
-    ${COMPOSE} run --rm php composer create-project laravel/laravel ./application
+    "${COMPOSE[@]}" run --rm php composer create-project laravel/laravel ./application
     echo "Laravel installed"
 
     # move sail docker-compose.yml to docker-compose-sail.yml
@@ -502,7 +502,7 @@ laravel() {
 setCraftableStability() {
     # Ensure composer.json exists before modifying config
     if [[ -f composer.json ]]; then
-        if ! ${COMPOSE} run --rm php composer config minimum-stability dev; then
+        if ! "${COMPOSE[@]}" run --rm php composer config minimum-stability dev; then
             echo "Failed to set composer minimum-stability to dev."
             return 1
         fi
@@ -551,13 +551,13 @@ craftable() {
     fi
 
     echo "Require craftable ..."
-    if ! ${COMPOSE} run --rm php composer require dejwcake/craftable; then
+    if ! "${COMPOSE[@]}" run --rm php composer require dejwcake/craftable; then
         echo "Failed to require dejwcake/craftable."
         exit 1
     fi
 
     echo "Require admin-generator ..."
-    if ! ${COMPOSE} run --rm php composer require --dev dejwcake/admin-generator; then
+    if ! "${COMPOSE[@]}" run --rm php composer require --dev dejwcake/admin-generator; then
         echo "Failed to require dejwcake/admin-generator (dev)."
         exit 1
     fi
@@ -660,19 +660,19 @@ main() {
         # Start up containers
         start)
             shift 1
-            ${COMPOSE} up -d "$@"
+            "${COMPOSE[@]}" up -d "$@"
             ;;
 
         # Start up containers not as daemon
         up)
             shift 1
-            ${COMPOSE} up "$@"
+            "${COMPOSE[@]}" up "$@"
             ;;
 
         # Stop the containers
         stop)
             shift 1
-            ${COMPOSE} down "$@"
+            "${COMPOSE[@]}" down "$@"
             ;;
 
         # Restart the containers
@@ -686,7 +686,7 @@ main() {
         # Rebuild the containers
         pull)
             shift 1
-            ${COMPOSE} pull
+            "${COMPOSE[@]}" pull
             ;;
 
         # Rebuild the containers
@@ -715,51 +715,51 @@ main() {
         test)
             shift 1
             export APP_ENV="testing"
-            ${COMPOSE} run --rm \
+            "${COMPOSE[@]}" run --rm \
                 php \
                 ./vendor/bin/phpunit "$@"
             ;;
 
         css)
             shift 1
-            ${COMPOSE} run --rm php-qa phpcs -s --colors --extensions=php "$@"
+            "${COMPOSE[@]}" run --rm php-qa phpcs -s --colors --extensions=php "$@"
             ;;
 
         csf)
             shift 1
-            ${COMPOSE} run --rm php-qa phpcbf -s --colors --extensions=php "$@"
+            "${COMPOSE[@]}" run --rm php-qa phpcbf -s --colors --extensions=php "$@"
             ;;
 
         phpstan|pst)
             shift 1
-            ${COMPOSE} run --rm php-qa phpstan analyse --configuration=phpstan.neon "$@"
+            "${COMPOSE[@]}" run --rm php-qa phpstan analyse --configuration=phpstan.neon "$@"
             ;;
 
         phpmd|pmd)
             shift 1
             DIRS=$1
             shift 1
-            ${COMPOSE} run --rm php-qa phpmd ${DIRS} ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml "$@"
+            "${COMPOSE[@]}" run --rm php-qa phpmd ${DIRS} ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml "$@"
             ;;
 
         deptrac|dpt)
             shift 1
-            ${COMPOSE} run --rm php-qa deptrac analyze "$@"
+            "${COMPOSE[@]}" run --rm php-qa deptrac analyze "$@"
             ;;
 
         rector)
             shift 1
-            ${COMPOSE} run --rm php-qa rector "$@"
+            "${COMPOSE[@]}" run --rm php-qa rector "$@"
             ;;
 
         compatibility|cmp)
             shift 1
-            ${COMPOSE} run --rm php-qa phpcs --standard=.phpcs.compatibility.xml --cache=.phpcs.cache "$@"
+            "${COMPOSE[@]}" run --rm php-qa phpcs --standard=.phpcs.compatibility.xml --cache=.phpcs.cache "$@"
             ;;
 
         composer-normalize|cn)
             shift 1
-            ${COMPOSE} run --rm php-qa composer normalize "$@"
+            "${COMPOSE[@]}" run --rm php-qa composer normalize "$@"
             ;;
 
         #
@@ -769,7 +769,7 @@ main() {
         # If "npm" is used, run npm from our node container
         npm)
             shift 1
-            ${COMPOSE} run --rm \
+            "${COMPOSE[@]}" run --rm \
                 node \
                 npm "$@"
             ;;
@@ -803,13 +803,13 @@ main() {
         # Sent exec command to docker-compose
         exec)
             shift 1
-            ${COMPOSE} exec "$@"
+            "${COMPOSE[@]}" exec "$@"
             ;;
 
         # Sent run command to docker-compose
         run)
             shift 1
-            ${COMPOSE} run "$@"
+            "${COMPOSE[@]}" run "$@"
             ;;
 
         #
@@ -862,13 +862,13 @@ main() {
 
         # Else, pass args to docker-compose
         *)
-            ${COMPOSE} "$@"
+            "${COMPOSE[@]}" "$@"
             ;;
 
         esac
     else
         # Use the docker-compose ps command if nothing else passed through
-        ${COMPOSE} ps
+        "${COMPOSE[@]}" ps
     fi
 }
 
