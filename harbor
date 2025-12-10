@@ -52,7 +52,12 @@ setupEnvVariables() {
 
     # source .env.harbor
     if [[ -f .env.harbor ]]; then
+        # Temporarily disable nounset to avoid errors on unset vars inside .env.harbor
+        set +u
+        set -o allexport
         source .env.harbor
+        set +o allexport
+        set -u
     else
         echo "Harbor .env.harbor file is missing, cannot continue."
         exit 1
