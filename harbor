@@ -47,21 +47,26 @@ checkSystemSupport() {
     return 0
 }
 
+# Safely source .env.harbor with checks; compatible with set -u
+sourceHarborEnv() {
+    if [[ ! -f .env.harbor ]]; then
+        echo "Harbor .env.harbor file is missing, cannot continue."
+        exit 1
+    fi
+
+    # Temporarily disable nounset to avoid errors on unset vars inside .env.harbor
+    set +u
+    set -o allexport
+    source .env.harbor
+    set +o allexport
+    set -u
+}
+
 setupEnvVariables() {
     # prepare default env variables
 
     # source .env.harbor
-    if [[ -f .env.harbor ]]; then
-        # Temporarily disable nounset to avoid errors on unset vars inside .env.harbor
-        set +u
-        set -o allexport
-        source .env.harbor
-        set +o allexport
-        set -u
-    else
-        echo "Harbor .env.harbor file is missing, cannot continue."
-        exit 1
-    fi
+    sourceHarborEnv
 
     # create base compose command (prefer docker compose v2, fallback to docker-compose v1)
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
@@ -369,11 +374,8 @@ prepareEnv() {
     "${SEDCMD[@]}" "s/# DB_HOST=.*/DB_HOST=${HARBOR_DB_HOST}/" .env
     "${SEDCMD[@]}" "s/# DB_PORT=.*/DB_PORT=${HARBOR_DB_PORT}/" .env
 
-    if [[ -f .env.harbor ]]; then
-        set -o allexport
-        source .env.harbor
-        set +o allexport
-    fi
+    sourceHarborEnv
+
     "${SEDCMD[@]}" "s/DB_DATABASE=.*/DB_DATABASE=${DB_DATABASE}/" .env
     "${SEDCMD[@]}" "s/DB_USERNAME=.*/DB_USERNAME=${DB_USERNAME}/" .env
     "${SEDCMD[@]}" "s/DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" .env
