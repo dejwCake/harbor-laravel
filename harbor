@@ -401,8 +401,11 @@ prepareEnv() {
 prepareContainers() {
     # need to start first, because it takes time to setup database
     echo "Restarting containers ..."
+
     # restart docker containers
     ./harbor restart
+
+    # Wait for database using helper script provided in images
     ${COMPOSE} exec db wait-for-active-database.sh
 }
 
@@ -411,10 +414,17 @@ initLaravel() {
 
     prepareEnv
 
-    # art key:generate
-    if [[ -z "${APP_KEY}" ]] || [[ ${APP_KEY} == "SomeRandomString" ]]; then
-        ${COMPOSE} run --rm php php artisan key:generate
-        # source actual env values
+    # art key:generate (only if missing or default)
+    if [[ -f .env ]]; then
+        source .env
+    fi
+    if [[ -z "${APP_KEY:-}" ]] || [[ "${APP_KEY}" == "SomeRandomString" ]]; then
+        echo "Generating APP_KEY ..."
+        if ! ${COMPOSE} run --rm php php artisan key:generate; then
+            echo "Failed to generate APP_KEY via artisan. Please check your Laravel installation."
+            exit 1
+        fi
+        # re-source actual env values
         source .env
     fi
 
@@ -435,14 +445,15 @@ initLaravel() {
 installLaravel() {
     echo "Installing new laravel application to current folder."
 
-    # remove all containers and volumes
-    ${COMPOSE} down -v
+    # remove all containers and volumes (tolerate if not running)
+    ${COMPOSE} down -v || true
 
     testRunningContainers
 
     initNodeModulesDir
 
     # use php container to create laravel application
+    echo "Creating Laravel application in temporary 'application' folder ..."
     ${COMPOSE} run --rm php composer create-project laravel/laravel ./application
     echo "Laravel installed"
 
@@ -452,20 +463,37 @@ installLaravel() {
         mv application/docker-compose.yml application/docker-compose-sail.yml
     fi
 
-    # move application content to this folder
-    echo "Move application and remove dir"
-    mv application/* application/.[!.]* .
-    rm -rf ./application
+    # move application content to this folder (include dotfiles)
+    echo "Move application contents and remove temp folder"
+    if [[ -d application ]]; then
+        shopt -s dotglob nullglob
+        mv application/* .
+        shopt -u dotglob
+        rm -rf ./application
+    else
+        echo "Expected temporary 'application' folder not found. Installation may have failed."
+        exit 1
+    fi
 
     echo "Laravel installed"
 }
 
 laravel() {
-    installLaravel
+    echo "Starting Laravel installation and initialization ..."
+
+    if ! installLaravel; then
+        echo "Laravel installation failed. Aborting."
+        exit 1
+    fi
 
     echo "Laravel initializing ..."
 
-    initLaravel
+    if ! initLaravel; then
+        echo "Laravel initialization failed. Aborting."
+        exit 1
+    fi
+
+    echo "Laravel install + init complete."
 }
 
 setCraftableStability() {
