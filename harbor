@@ -52,22 +52,11 @@ setupEnvVariables() {
 
     # source .env.harbor
     if [[ -f .env.harbor ]]; then
-        set -o allexport
         source .env.harbor
-        set +o allexport
     else
         echo "Harbor .env.harbor file is missing, cannot continue."
         exit 1
     fi
-
-    # Safe defaults for UID/GID when not provided in environment (works under set -u)
-    if [[ -z ${HARBOR_USER_UID:-} || -z ${HARBOR_USER_UID} ]]; then
-        HARBOR_USER_UID="$(id -u)"
-    fi
-    if [[ -z ${HARBOR_USER_GID:-} || -z ${HARBOR_USER_GID} ]]; then
-        HARBOR_USER_GID="$(id -g)"
-    fi
-    export HARBOR_USER_UID HARBOR_USER_GID
 
     # create base compose command (prefer docker compose v2, fallback to docker-compose v1)
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
