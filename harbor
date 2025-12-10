@@ -221,7 +221,12 @@ db() {
     if [[ ${HARBOR_DB_CONNECTION} == "pgsql" ]]; then
         DB_COMMAND=(psql -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
-        DB_COMMAND=(mysql -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+        # Prefer MariaDB client if available, fallback to mysql
+        if "${COMPOSE[@]}" exec db sh -c 'command -v mariadb >/dev/null 2>&1'; then
+            DB_COMMAND=(mariadb -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+        else
+            DB_COMMAND=(mysql -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+        fi
     else
         echo "Database ${HARBOR_DB_CONNECTION} not supported in this command."
         return 1
@@ -242,7 +247,12 @@ dump() {
     if [[ ${HARBOR_DB_CONNECTION} == "pgsql" ]]; then
         DB_COMMAND=(pg_dump -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
-        DB_COMMAND=(mysqldump -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+        # Prefer MariaDB dump client if available, fallback to mysqldump
+        if "${COMPOSE[@]}" exec db sh -c 'command -v mariadb-dump >/dev/null 2>&1'; then
+            DB_COMMAND=(mariadb-dump -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+        else
+            DB_COMMAND=(mysqldump -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+        fi
     else
         echo "Database ${HARBOR_DB_CONNECTION} not supported in this command."
         return 1
