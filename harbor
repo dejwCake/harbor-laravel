@@ -60,6 +60,16 @@ setupEnvVariables() {
         exit 1
     fi
 
+    # create base compose command (prefer docker compose v2, fallback to docker-compose v1)
+    if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+        COMPOSE="docker compose -f docker-compose.yml"
+    else
+        COMPOSE="docker-compose -f docker-compose.yml"
+    fi
+    if [[ -f "docker-compose.override.yml" ]]; then
+        COMPOSE="$COMPOSE -f docker-compose.override.yml"
+    fi
+
     # set xdebug host for developing
     if [[ $(docker version --format '{{.Server.Version}}') > 18.03.0 ]]; then
         HARBOR_XDEBUG_HOST=host.docker.internal
@@ -76,25 +86,19 @@ setupEnvVariables() {
     fi
     export HARBOR_XDEBUG_HOST
 
-    # set sed command
-    if [[ "$MACHINE" == "linux" ]] || [[ "$MACHINE" == "mingw64" ]]; then
-        SEDCMD="sed -i"
-    elif [[ "$MACHINE" == "mac" ]]; then
+    # set sed command (default if machine not matched)
+    if [[ "$MACHINE" == "mac" ]]; then
         SEDCMD="sed -i .bak"
+    else
+        SEDCMD="sed -i"
     fi
 
-    # is the environment running
-    PSRESULT="$(docker-compose ps -q)"
-    if [[ ! -z "$PSRESULT" ]]; then
+    # is the environment running (use selected compose command)
+    PSRESULT="$( $COMPOSE ps -q )"
+    if [[ -n "$PSRESULT" ]]; then
         EXEC="yes"
     else
         EXEC="no"
-    fi
-
-    # create base docker-compose command to run
-    COMPOSE="docker-compose -f docker-compose.yml"
-    if [[ -f "docker-compose.override.yml" ]]; then
-        COMPOSE="$COMPOSE -f docker-compose.override.yml"
     fi
 }
 
