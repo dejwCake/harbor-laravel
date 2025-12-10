@@ -497,24 +497,67 @@ laravel() {
 }
 
 setCraftableStability() {
+    # Ensure composer.json exists before modifying config
     if [[ -f composer.json ]]; then
-
-        # modify values
-        ${COMPOSE} run --rm php composer config minimum-stability dev
+        if ! ${COMPOSE} run --rm php composer config minimum-stability dev; then
+            echo "Failed to set composer minimum-stability to dev."
+            return 1
+        fi
+        return 0
+    else
+        echo "composer.json not found; skipping minimum-stability change."
+        return 0
     fi
 }
 
+# Parse flags for craftable setup; returns 1 if --dev was provided, else 0
+parseCraftableFlags() {
+    local DEV=0
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dev)
+                DEV=1
+                shift 1
+                ;;
+            *)
+                shift 1
+                ;;
+        esac
+    done
+    echo "$DEV"
+}
+
 craftable() {
-    installLaravel
+    # Determine flags (e.g., --dev)
+    local DEV
+    DEV="$(parseCraftableFlags "$@")"
 
-    # TODO remove later
-    echo "Stability"
-    setCraftableStability
+    # Install base Laravel application first
+    if ! installLaravel; then
+        echo "Laravel installation failed. Aborting craftable setup."
+        exit 1
+    fi
 
-    echo "Require craftable"
-    ${COMPOSE} run --rm php composer require dejwcake/craftable
-    echo "Require admin-generator"
-    ${COMPOSE} run --rm php composer require --dev dejwcake/admin-generator
+
+    # Only set composer stability when --dev was provided
+    if [[ "$DEV" == "1" ]]; then
+        echo "Setting composer minimum-stability to dev ..."
+        if ! setCraftableStability; then
+            echo "Setting composer stability failed; continuing, but craftable install may fail."
+        fi
+    fi
+
+    echo "Require craftable ..."
+    if ! ${COMPOSE} run --rm php composer require dejwcake/craftable; then
+        echo "Failed to require dejwcake/craftable."
+        exit 1
+    fi
+
+    echo "Require admin-generator ..."
+    if ! ${COMPOSE} run --rm php composer require --dev dejwcake/admin-generator; then
+        echo "Failed to require dejwcake/admin-generator (dev)."
+        exit 1
+    fi
 
     echo "Craftable installed, initializing ..."
 
@@ -522,17 +565,22 @@ craftable() {
 
     prepareContainers
 
-    echo "Installing craftable ..."
-    # install craftable
-    ./harbor art craftable:test-db-connection
-    ./harbor art craftable:install
+    echo "Running craftable install commands ..."
+    if ! ./harbor art craftable:test-db-connection; then
+        echo "Craftable DB connection test failed."
+        exit 1
+    fi
+    if ! ./harbor art craftable:install; then
+        echo "Craftable install command failed."
+        exit 1
+    fi
 
     initNpmCraftable
 
     # stop docker containers
     ./harbor stop
 
-    echo "All set."
+    echo "Craftable setup complete."
 }
 
 main() {
