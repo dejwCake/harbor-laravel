@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 
+# Safer bash settings
+set -euo pipefail
+IFS=$'\n\t'
+
 TYPE=php
 VERSION=4.1.0
 
-# making harbor command available
-chmod +x ./harbor
+# Make harbor command executable if possible
+if [[ -w ./harbor ]]; then
+  chmod +x ./harbor || true
+fi
 
 checkSystemSupport() {
     # check system if supported
