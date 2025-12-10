@@ -286,27 +286,57 @@ initLaravelCheckAndCopyEnv() {
     # cp .env.example .env if .env is missing
     if [[ ! -f .env ]] && [[ -f .env.example ]]; then
         cp .env.example .env
+        echo ".env created from .env.example"
     fi
+
+    return 0
 }
 
 initNodeModulesDir() {
     # make dir for node_modules, before docker-compose does
     mkdir -p ./node_modules
+
+    # prevent accidental commits of host node_modules content
+    if [[ ! -f ./node_modules/.gitignore ]]; then
+        printf "*\n!/.gitignore\n" > ./node_modules/.gitignore
+    fi
 }
 
 initNpm() {
     echo "Npm ..."
-    # npm install
-    ./harbor npm install
 
-    # npm run dev
-    ./harbor npm run build
+    # Verify package.json exists before installing
+    if [[ ! -f package.json ]]; then
+        echo "No package.json found, skipping npm steps."
+        return 0
+    fi
+
+    # Prefer npm ci when a lockfile exists, otherwise npm install
+    if [[ -f package-lock.json ]]; then
+        ./harbor npm ci
+    else
+        ./harbor npm install
+    fi
+
+    # Build if script exists; fallback to dev if build is missing
+    if jq -e '.scripts.build' package.json >/dev/null 2>&1; then
+        ./harbor npm run build
+    elif jq -e '.scripts.dev' package.json >/dev/null 2>&1; then
+        ./harbor npm run dev
+    else
+        echo "No build/dev script found in package.json, skipping build step."
+    fi
 }
 
 initNpmCraftable() {
   initNpm
 
-  ./harbor npm run craftable-dev
+  # Run craftable-dev only if script exists
+  if [[ -f package.json ]] && jq -e '.scripts["craftable-dev"]' package.json >/dev/null 2>&1; then
+    ./harbor npm run craftable-dev
+  else
+    echo "No craftable-dev script found in package.json, skipping."
+  fi
 }
 
 prepareEnv() {
