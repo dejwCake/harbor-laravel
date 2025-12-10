@@ -144,26 +144,42 @@ testRunningContainers() {
 }
 
 rebuild() {
-    REMOVE_IMAGES=""
-    REMOVE_VOLUMES=""
-    for i in "$@"; do
-        case ${i} in
-        -i | --images)
-            REMOVE_IMAGES="--rmi all"
-            ;;
+    local REMOVE_IMAGES=""
+    local REMOVE_VOLUMES=""
+    local EXTRA_ARGS=()
 
-        -v | --volumes)
-            REMOVE_VOLUMES="-v"
-            ;;
-
-        *) ;;
-
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -i|--images)
+                REMOVE_IMAGES="--rmi all"
+                shift 1
+                ;;
+            -v|--volumes)
+                REMOVE_VOLUMES="-v"
+                shift 1
+                ;;
+            *)
+                EXTRA_ARGS+=("$1")
+                shift 1
+                ;;
         esac
     done
+
+    # Ensure containers are up before rebuild steps
     ./harbor start
+
+    # Bring down with optional volume/image removal
     ${COMPOSE} down ${REMOVE_VOLUMES} ${REMOVE_IMAGES}
+
+    # Pull latest images
     ${COMPOSE} pull
-    ${COMPOSE} build
+
+    # Build with any extra args (e.g., --no-cache)
+    if [[ ${#EXTRA_ARGS[@]} -gt 0 ]]; then
+        ${COMPOSE} build "${EXTRA_ARGS[@]}"
+    else
+        ${COMPOSE} build
+    fi
 }
 
 artisan() {
