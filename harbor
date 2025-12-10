@@ -288,8 +288,6 @@ ssh() {
     local service="$1"
     local user_arg=()
 
-    echo "${COMPOSE[@]}"
-
     if [[ "$EXEC" == "yes" ]] && [[ "$service" != "node" ]]; then
         if [[ "$service" == "php" ]] && [[ "${2:-}" != "root" ]]; then
             # docker compose exec expects --user, not -u
