@@ -223,10 +223,15 @@ db() {
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
         # Prefer MariaDB client if available, fallback to mysql
         if "${COMPOSE[@]}" exec db sh -c 'command -v mariadb >/dev/null 2>&1'; then
-            DB_COMMAND=(mariadb -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+            DB_COMMAND=(mariadb -u "${DB_USERNAME}" -h localhost)
         else
-            DB_COMMAND=(mysql -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+            DB_COMMAND=(mysql -u "${DB_USERNAME}" -h localhost)
         fi
+        # Add password if provided
+        if [[ -n ${DB_PASSWORD:-} ]]; then
+            DB_COMMAND+=( -p"${DB_PASSWORD}" )
+        fi
+        DB_COMMAND+=( "${DB_DATABASE}" )
     else
         echo "Database ${HARBOR_DB_CONNECTION} not supported in this command."
         return 1
@@ -249,10 +254,15 @@ dump() {
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
         # Prefer MariaDB dump client if available, fallback to mysqldump
         if "${COMPOSE[@]}" exec db sh -c 'command -v mariadb-dump >/dev/null 2>&1'; then
-            DB_COMMAND=(mariadb-dump -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+            DB_COMMAND=(mariadb-dump -u "${DB_USERNAME}" -h localhost)
         else
-            DB_COMMAND=(mysqldump -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
+            DB_COMMAND=(mysqldump -u "${DB_USERNAME}" -h localhost)
         fi
+        # Add password if provided
+        if [[ -n ${DB_PASSWORD:-} ]]; then
+            DB_COMMAND+=( -p"${DB_PASSWORD}" )
+        fi
+        DB_COMMAND+=( "${DB_DATABASE}" )
     else
         echo "Database ${HARBOR_DB_CONNECTION} not supported in this command."
         return 1
