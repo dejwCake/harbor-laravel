@@ -103,6 +103,9 @@ setupEnvVariables() {
 }
 
 touchHistory() {
+    # Ensure history directory exists
+    mkdir -p ./.harbor/history
+
     if [[ ! -f ./.harbor/history/harbor_bash_history ]]; then
         touch ./.harbor/history/harbor_bash_history
     fi
@@ -112,28 +115,25 @@ touchHistory() {
 }
 
 prepareExternalVolumes() {
-    if [[ ! "$(docker volume ls -q | grep -w empty-node-modules)" ]]; then
-        #    echo "empty-node-modules volume does not exist, will be created now."
-        docker volume create --driver local empty-node-modules
+    # Ensure expected named volumes exist (idempotent)
+    if ! docker volume ls -q | grep -qw empty-node-modules; then
+        docker volume create --driver local empty-node-modules >/dev/null 2>&1
     fi
-    if [[ ! "$(docker volume ls -q | grep -w empty-vendor)" ]]; then
-        #    echo "empty-vendor volume does not exist, will be created now."
-        docker volume create --driver local empty-vendor
+    if ! docker volume ls -q | grep -qw empty-vendor; then
+        docker volume create --driver local empty-vendor >/dev/null 2>&1
     fi
-    if [[ ! "$(docker volume ls -q | grep -w composer-cache)" ]]; then
-        #    echo "composer-cache volume does not exist, will be created now."
-        docker volume create --driver local composer-cache
+    if ! docker volume ls -q | grep -qw composer-cache; then
+        docker volume create --driver local composer-cache >/dev/null 2>&1
     fi
 }
 
 testRunningContainers() {
-    if [[ ! -z $(docker ps -q) ]]; then
+    if [[ -n $(docker ps -q) ]]; then
         echo "You have some running containers. Are you sure that they are not blocking required ports: $HARBOR_WEB_PORT, $HARBOR_DB_PORT, $HARBOR_DB_TESTING_PORT ?"
-        echo "Do you wish to continue (y/n)?"
-        old_stty_cfg=$(stty -g)
-        stty raw -echo
-        answer=$(head -c 1)
-        stty ${old_stty_cfg} # Careful playing with stty
+        printf "Do you wish to continue (y/n)? "
+        local answer
+        read -r -n1 answer
+        echo ""
         if echo "$answer" | grep -iq "^y"; then
             echo "Continue ..."
             ${COMPOSE} down
