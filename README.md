@@ -12,7 +12,19 @@ This harbor provides docker configuration for your project. It is based on vesse
 
 This script handles the current instance. To create new, install or update harbor, use harbor installer.
 
+## Tip: command alias
+
+For convenience, you can use a short alias:
+
+- alias hb='./harbor'
+
+Then use `hb` instead of `./harbor` in the commands below.
+
 ## Upgrade guide ##
+
+### From 4 to 5 ###
+
+As Harbor 5 uses the same structure and files as v4, so the upgrade is simple. The main difference internal changes in the commands.
 
 ### From 3 to 4 ###
 
@@ -85,11 +97,11 @@ MariaDB 11.8
 MariaDB 12.0
 MariaDB 12.1
 
-Postgress 14
-Postgress 15
-Postgress 16
-Postgress 17
-Postgress 18
+Postgres 14
+Postgres 15
+Postgres 16
+Postgres 17
+Postgres 18
 
 Node 20
 Node 22
@@ -117,13 +129,27 @@ HARBOR_DB_DATA_PATH=/var/lib/postgresql/data
 HARBOR_DB_USER=postgres
 ```
 
+### CLI clients used by harbor
+
+- MariaDB/MySQL: modern MariaDB images provide `mariadb` and `mariadb-dump`. The harbor script prefers these clients and falls back to `mysql`/`mysqldump` if not available.
+- PostgreSQL: `psql` and `pg_dump`.
+
+Examples:
+
+- MariaDB
+  - `hb db -e 'SHOW DATABASES;'`
+  - `hb dump > backup.sql`
+- PostgreSQL (non-interactive)
+  - `PGPASSWORD="$DB_PASSWORD" hb db -U "$DB_USERNAME" -h "$HARBOR_DB_HOST" "$DB_DATABASE"`
+  - `PGPASSWORD="$DB_PASSWORD" hb dump -U "$DB_USERNAME" -h "$HARBOR_DB_HOST" "$DB_DATABASE" > backup.sql`
+
 ## Let's init laravel / craftable ##
 
 If you have an existing laravel / craftable project, and you have not initialized this project, run 
 
 `harbor init laravel` or `harbor init craftable` 
 
-which will setup some .env variables, install required packages and will run npm
+which will setup some .env variables, install required packages and will run npm. The script will run `npm run build` when present, otherwise `npm run dev`. For Craftable, if `craftable-dev` exists in package.json, it will be executed.
 
 ## Starting a harbor (docker) ##
 
@@ -165,17 +191,21 @@ In this section you can find all commands supported by harbor:
 
 `harbor test` will run phpunit tests on new php container. All additional arguments are passed to phpunit.
 
-`harbor css` will run php code style check on new php container. All additional arguments are passed to command.
+`harbor css` will run php code style check (phpcs) on the php-qa container. All additional arguments are passed to command.
 
-`harbor csf` will run php code style fix on new php container. All additional arguments are passed to command.
+`harbor csf` will run php code style fix (phpcbf) on the php-qa container. All additional arguments are passed to command.
 
-`harbor pst` will run php stan on new php container. All additional arguments are passed to command.
+`harbor pst` will run phpstan analyse (php-qa container). All additional arguments are passed to command.
 
-`harbor pmd` will run php mass detector on new php container with argument with list of dirs. All additional arguments are passed to command.
+`harbor pmd` will run phpmd on the php-qa container with dir list argument. All additional arguments are passed to command.
 
-`harbor cmp` will run php code compatibility check on new php container. All additional arguments are passed to command.
+`harbor dpt` will run deptrac analyze (php-qa container). All additional arguments are passed to command.
 
-`harbor cn` will run php composer normalisation on new php container. All additional arguments are passed to command.
+`harbor rector` will run rector rules (php-qa container). All additional arguments are passed to command.
+
+`harbor cmp` will run phpcs compatibility standard (php-qa container). All additional arguments are passed to command.
+
+`harbor cn` will run composer normalize (php-qa container). All additional arguments are passed to command.
 
 #### NPM container commands ####
 
@@ -183,23 +213,23 @@ In this section you can find all commands supported by harbor:
 
 #### DB container commands ####
 
-`harbor db` will run `mysql`/`psql` command on db container with user and host form .env file and pass all additional arguments to `mysql`/`psql` command.
+`harbor db` will run MariaDB (`mariadb`/`mysql`) or PostgreSQL (`psql`) on the db container using credentials from .env and pass all additional arguments to the client. For MariaDB/MySQL, when `DB_PASSWORD` is set, the `-p"<password>"` flag is added automatically. For PostgreSQL, use `-W` to prompt or set `PGPASSWORD` for non-interactive runs.
 
-`harbor dump` will run `mysqldump`/`pg_dump` command on db container with user and host form .env file and pass all additional arguments to `mysqldump`/`pg_dump` command.
+`harbor dump` will run MariaDB dump (`mariadb-dump`/`mysqldump`) or PostgreSQL (`pg_dump`) on the db container using credentials from .env and pass all additional arguments to the client. For MariaDB/MySQL, when `DB_PASSWORD` is set, the `-p"<password>"` flag is added automatically. For PostgreSQL, set `PGPASSWORD` for non-interactive runs.
 
 #### Global commands ####
 
 `harbor ssh {container}` will connect to container and run bash in it, cannot be used with node. You can provide a second parameter `root` to open as root. 
 
-`harbor exec` is an alias for docker-compose exec 
+`harbor exec` is an alias for docker compose exec 
 
-`harbor run` is an alias for docker-compose run 
+`harbor run` is an alias for docker compose run 
 
 ## Install command (use with care) ##
 
-`harbor new laravel` will install laravel application to current folder. See harbor installer, it is the recommended way.
+`harbor create-project laravel` or `harbor new laravel` will install a new Laravel application in the current folder. See harbor installer; it is the recommended way.
 
-`harbor new craftable` will install craftable application to current folder. See harbor installer, it is the recommended way.
+`harbor create-project craftable [--dev]` or `harbor new craftable [--dev]` will install a new Craftable application in the current folder. Use `--dev` to set composer minimum-stability to dev before requiring Craftable. See harbor installer; it is the recommended way.
 
 ## SSH keys ##
 
