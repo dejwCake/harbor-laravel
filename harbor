@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 TYPE=php
-VERSION=4.1.0
+VERSION=5.0.0
 
 # Make harbor command executable if possible
 if [[ -w ./harbor ]]; then
@@ -209,57 +209,68 @@ composer() {
 }
 
 db() {
+    local DB_COMMAND
     if [[ ${HARBOR_DB_CONNECTION} == "pgsql" ]]; then
-        DB_COMMAND="psql -U ${DB_USERNAME} -h localhost ${DB_DATABASE}"
+        DB_COMMAND=(psql -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
-        DB_COMMAND="mysql -u ${DB_USERNAME} -h localhost ${DB_DATABASE}"
+        DB_COMMAND=(mysql -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     else
         echo "Database ${HARBOR_DB_CONNECTION} not supported in this command."
+        return 1
     fi
     if [[ "$EXEC" == "yes" ]]; then
         ${COMPOSE} exec \
             db \
-            ${DB_COMMAND} "$@"
+            "${DB_COMMAND[@]}" "$@"
     else
         ${COMPOSE} run --rm \
             db \
-            ${DB_COMMAND} "$@"
+            "${DB_COMMAND[@]}" "$@"
     fi
 }
 
 dump() {
+    local DB_COMMAND
     if [[ ${HARBOR_DB_CONNECTION} == "pgsql" ]]; then
-        DB_COMMAND="pg_dump -U ${DB_USERNAME} -h localhost ${DB_DATABASE}"
+        DB_COMMAND=(pg_dump -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
-        DB_COMMAND="mysqldump -u ${DB_USERNAME} -h localhost ${DB_DATABASE}"
+        DB_COMMAND=(mysqldump -u "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     else
         echo "Database ${HARBOR_DB_CONNECTION} not supported in this command."
+        return 1
     fi
     if [[ "$EXEC" == "yes" ]]; then
         ${COMPOSE} exec \
             db \
-            ${DB_COMMAND} "$@"
+            "${DB_COMMAND[@]}" "$@"
     else
         ${COMPOSE} run --rm \
             db \
-            ${DB_COMMAND} "$@"
+            "${DB_COMMAND[@]}" "$@"
     fi
 }
 
 ssh() {
-    if [[ "$EXEC" == "yes" ]] && [[ "$1" != "node" ]]; then
-        if [[ "$1" == "php" ]] && [[ "$2" != "root" ]]; then
-            USER_ARGUMENT="-u harbor"
-        else
-            USER_ARGUMENT=""
+    # Require a target service name
+    if [[ $# -lt 1 ]]; then
+        echo "Usage: ./harbor ssh <service> [root]"
+        exit 1
+    fi
+
+    local service="$1"
+    local user_arg=""
+
+    if [[ "$EXEC" == "yes" ]] && [[ "$service" != "node" ]]; then
+        if [[ "$service" == "php" ]] && [[ "${2:-}" != "root" ]]; then
+            user_arg="-u harbor"
         fi
         ${COMPOSE} exec \
-            ${USER_ARGUMENT} \
-            $1 \
+            ${user_arg} \
+            "$service" \
             bash
     else
         ${COMPOSE} run --rm \
-            $1 \
+            "$service" \
             bash
     fi
 }
