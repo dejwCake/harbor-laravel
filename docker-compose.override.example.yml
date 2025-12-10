@@ -23,6 +23,11 @@
 #      PGPASSWORD: "${DB_PASSWORD:-bestsecret}"
 #    volumes:
 #     - db-data:${HARBOR_DB_DATA_PATH:-/var/lib/postgresql/data}:delegated
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || exit 1"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 6
 
 #  db-testing:
   # Add your own db-testing configuration here
@@ -33,8 +38,11 @@
 #      POSTGRES_USER: "${DB_USERNAME:-root}"
 #      POSTGRES_PASSWORD: "${DB_PASSWORD:-bestsecret}"
 #      PGPASSWORD: "${DB_PASSWORD:-bestsecret}"
-#    volumes:
-#     - db-testing-data:${HARBOR_DB_DATA_PATH:-/var/lib/postgresql/data}:delegated
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB || exit 1"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 6
 
 #  redis:
   # Add your own redis configuration here
@@ -47,5 +55,3 @@
 
 #volumes:
 # Uncomment and add your own volume configuration here
-#  db-testing-data:
-#    driver: "local"
