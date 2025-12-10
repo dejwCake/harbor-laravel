@@ -319,9 +319,9 @@ initNpm() {
     fi
 
     # Build if script exists; fallback to dev if build is missing
-    if jq -e '.scripts.build' package.json >/dev/null 2>&1; then
+    if grep -Eq '"scripts"[^{]*\{[^}]*"build"' package.json; then
         ./harbor npm run build
-    elif jq -e '.scripts.dev' package.json >/dev/null 2>&1; then
+    elif grep -Eq '"scripts"[^{]*\{[^}]*"dev"' package.json; then
         ./harbor npm run dev
     else
         echo "No build/dev script found in package.json, skipping build step."
@@ -332,7 +332,7 @@ initNpmCraftable() {
   initNpm
 
   # Run craftable-dev only if script exists
-  if [[ -f package.json ]] && jq -e '.scripts["craftable-dev"]' package.json >/dev/null 2>&1; then
+  if [[ -f package.json ]] && grep -Eq '"scripts"[^{]*\{[^}]*"craftable-dev"' package.json; then
     ./harbor npm run craftable-dev
   else
     echo "No craftable-dev script found in package.json, skipping."
