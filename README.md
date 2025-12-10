@@ -73,26 +73,27 @@ If you need to customize some harbor/docker settings, it is recommended to modif
 Currently supported versions are:
 
 ```
-PHP 8.1
 PHP 8.2
 PHP 8.3
 PHP 8.4
+PHP 8.5
 
-MariaDB 10.5
 MariaDB 10.6
 MariaDB 10.11
 MariaDB 11.4
-MariaDB 11.6
+MariaDB 11.8
+MariaDB 12.0
+MariaDB 12.1
 
-Postgress 13
 Postgress 14
 Postgress 15
 Postgress 16
 Postgress 17
+Postgress 18
 
-Node 18
 Node 20
 Node 22
+Node 24
 ```
 
 ## Databases ##

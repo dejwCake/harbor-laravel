@@ -15,7 +15,7 @@
 #  db:
   # Add your own db configuration here
   # For postgres use:
-#    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-17}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
+#    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-18}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
 #    environment:
 #      POSTGRES_DB: "${DB_DATABASE:-laravel}"
 #      POSTGRES_USER: "${DB_USERNAME:-root}"
@@ -27,7 +27,7 @@
 #  db-testing:
   # Add your own db-testing configuration here
   # For postgres use:
-#    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-17}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
+#    image: dejwcake/postgres${HARBOR_POSTGRES_VERSION:-18}:${HARBOR_POSTGRES_CONTAINER_VERSION:-1}
 #    environment:
 #      POSTGRES_DB: "${DB_DATABASE:-laravel}"
 #      POSTGRES_USER: "${DB_USERNAME:-root}"
