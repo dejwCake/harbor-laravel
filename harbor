@@ -310,6 +310,20 @@ initNodeModulesDir() {
     fi
 }
 
+# Check if a given npm script exists by grepping inside the scripts block
+hasNpmScript() {
+    local name="$1"
+    [[ -f package.json ]] || return 1
+    # Extract the scripts block and search for the script key
+    # Handles typical JSON formatting across macOS/Linux
+    if sed -n '/"scripts"[[:space:]]*:[[:space:]]*{/,/}/p' package.json | grep -Eq '"'; then
+        # Check for the specific script name within the block
+        grep -qE "\"$name\"[[:space:]]*:" package.json
+    else
+        return 1
+    fi
+}
+
 initNpm() {
     echo "Npm ..."
 
@@ -327,9 +341,9 @@ initNpm() {
     fi
 
     # Build if script exists; fallback to dev if build is missing
-    if grep -Eq '"scripts"[^{]*\{[^}]*"build"' package.json; then
+    if hasNpmScript "build"; then
         ./harbor npm run build
-    elif grep -Eq '"scripts"[^{]*\{[^}]*"dev"' package.json; then
+    elif hasNpmScript "dev"; then
         ./harbor npm run dev
     else
         echo "No build/dev script found in package.json, skipping build step."
@@ -340,7 +354,7 @@ initNpmCraftable() {
   initNpm
 
   # Run craftable-dev only if script exists
-  if [[ -f package.json ]] && grep -Eq '"scripts"[^{]*\{[^}]*"craftable-dev"' package.json; then
+  if hasNpmScript "craftable-dev"; then
     ./harbor npm run craftable-dev
   else
     echo "No craftable-dev script found in package.json, skipping."
