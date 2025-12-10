@@ -30,10 +30,8 @@ services:
     networks:
       - harbornet
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - db
+      - redis
     restart: on-failure
 
   php-qa:
@@ -42,6 +40,7 @@ services:
       - .:/var/www/html:delegated
     networks:
       - harbornet
+    restart: on-failure
 
   db:
     image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-11.8}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
@@ -60,11 +59,6 @@ services:
     networks:
       - harbornet
     restart: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "mariadb -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'SELECT 1' $MYSQL_DATABASE || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
 
   db-testing:
     image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-11.8}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
@@ -88,11 +82,6 @@ services:
     networks:
       - harbornet
     restart: on-failure
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
 
   node:
     image: dejwcake/node${HARBOR_NODE_VERSION:-24}:${HARBOR_NODE_CONTAINER_VERSION:-1}
