@@ -40,7 +40,6 @@ services:
       - .:/var/www/html:delegated
     networks:
       - harbornet
-    restart: on-failure
 
   db:
     image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-11.8}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
