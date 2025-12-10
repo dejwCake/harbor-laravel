@@ -583,6 +583,32 @@ craftable() {
     echo "Craftable setup complete."
 }
 
+usage() {
+    cat <<'USAGE'
+Harbor commands:
+  start [services]         - docker compose up -d
+  up [services]            - docker compose up
+  stop [args]              - docker compose down
+  restart                  - stop if running, then start
+  pull                     - docker compose pull
+  rebuild [flags]          - rebuild images (flags: -v/--volumes, -i/--images, forwards extras to build)
+  artisan|art [args]       - run php artisan [args]
+  composer|comp [args]     - run composer [args] in php container
+  test [args]              - run phpunit
+  npm [args]               - run npm in node container
+  db [args]                - run psql/mysql in db container
+  dump [args]              - run pg_dump/mysqldump in db container
+  ssh <service> [root]     - bash into service (php defaults to user 'harbor' unless 'root')
+  init laravel|craftable   - initialize existing project
+  create-project laravel   - create new laravel app
+  create-project craftable [--dev] - create craftable app (optional --dev sets composer minimum-stability dev)
+  exec/run [args]          - passthrough to docker compose exec/run
+  -v|--version             - print harbor version
+  -t|--type                - print service type
+  -h|--help                - show this help
+USAGE
+}
+
 main() {
     # If we pass any arguments...
     if [[ $# -gt 0 ]]; then
@@ -601,6 +627,12 @@ main() {
         # Get type
         -t | --type)
             echo ${TYPE}
+            exit 0
+            ;;
+
+        # Show help
+        -h | --help)
+            usage
             exit 0
             ;;
 
@@ -813,6 +845,7 @@ main() {
 
             # Installing new craftable project
             craftable)
+                shift 2
                 craftable "$@"
                 ;;
 
