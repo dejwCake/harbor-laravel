@@ -635,6 +635,17 @@ Harbor commands:
   create-project laravel   - create new laravel app
   create-project craftable [--dev] - create craftable app (optional --dev sets composer minimum-stability dev)
   exec/run [args]          - passthrough to docker compose exec/run
+
+  # QA commands (php-qa container)
+  css [paths]              - phpcs (code style) with -s --colors --extensions=php
+  csf [paths]              - phpcbf (code style fixer) with -s --colors --extensions=php
+  pst [args]               - phpstan analyse --configuration=phpstan.neon
+  pmd <dirs> [args]        - phpmd <dirs> ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml
+  dpt [args]               - deptrac analyze
+  rector [args]            - rector (run refactoring rules)
+  cmp [args]               - phpcs with .phpcs.compatibility.xml (compatibility standard)
+  cn [args]                - composer normalize
+
   -v|--version             - print harbor version
   -t|--type                - print service type
   -h|--help                - show this help
