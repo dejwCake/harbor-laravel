@@ -65,12 +65,12 @@ setupEnvVariables() {
 
     # create base compose command (prefer docker compose v2, fallback to docker-compose v1)
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-        COMPOSE="docker compose -f docker-compose.yml"
+        COMPOSE=(docker compose -f docker-compose.yml)
     else
-        COMPOSE="docker-compose -f docker-compose.yml"
+        COMPOSE=(docker-compose -f docker-compose.yml)
     fi
     if [[ -f "docker-compose.override.yml" ]]; then
-        COMPOSE="$COMPOSE -f docker-compose.override.yml"
+        COMPOSE+=( -f docker-compose.override.yml )
     fi
 
     # set xdebug host for developing
@@ -97,7 +97,7 @@ setupEnvVariables() {
     fi
 
     # is the environment running (use selected compose command)
-    PSRESULT="$( $COMPOSE ps -q )"
+    PSRESULT="$( "${COMPOSE[@]}" ps -q )"
     if [[ -n "$PSRESULT" ]]; then
         EXEC="yes"
     else
