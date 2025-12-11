@@ -16,9 +16,9 @@
     <file>bootstrap/</file>
     <file>config/</file>
     <file>database/</file>
-    <file>lang</file>
-    <file>resources</file>
-    <file>routes</file>
+    <file>lang/</file>
+    <file>resources/</file>
+    <file>routes/</file>
     <file>tests/</file>
 
     <!-- Include whole PHPCompatibility standard -->
