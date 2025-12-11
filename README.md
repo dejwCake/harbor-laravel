@@ -24,7 +24,7 @@ Then use `hb` instead of `./harbor` in the commands below.
 
 ### From 4 to 5 ###
 
-As Harbor 5 uses the same structure and files as v4, so the upgrade is simple. The main difference internal changes in the commands.
+As Harbor 5 uses the same structure as v4, only some new files, so the upgrade is simple. The main difference internal changes in the commands.
 
 ### From 3 to 4 ###
 
