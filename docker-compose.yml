@@ -35,7 +35,7 @@ services:
     restart: on-failure
 
   php-qa:
-    image: dejwcake/phpqa${HARBOR_PHP_QA_VERSION:-8.4}:${HARBOR_PHP_QA_CONTAINER_VERSION:-1}
+    image: dejwcake/phpqa${HARBOR_PHP_QA_VERSION:-8.4}:${HARBOR_PHP_QA_CONTAINER_VERSION:-2}
     volumes:
       - .:/var/www/html:delegated
     networks:

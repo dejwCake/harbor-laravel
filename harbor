@@ -573,7 +573,14 @@ updateReadmeFromStub() {
     if [[ "$stub_first" != "$readme_first" ]]; then
         local tmpfile
         tmpfile=$(mktemp)
-        cat "$stub" "$readme" > "$tmpfile"
+        # Add a separator before original content
+        {
+            cat "$stub"
+            echo ""
+            echo "# Original README"
+            echo ""
+            cat "$readme"
+        } > "$tmpfile"
         mv "$tmpfile" "$readme"
     fi
 
