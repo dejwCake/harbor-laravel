@@ -23,5 +23,5 @@
 
     <!-- Include whole PHPCompatibility standard -->
     <rule ref="PHPCompatibility" />
-    <config name="testVersion" value="8.4-"/>
+    <config name="testVersion" value="8.5-"/>
 </ruleset>

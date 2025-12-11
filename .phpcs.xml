@@ -5,7 +5,7 @@
     <arg value="nsp" />
     <arg name="cache" value=".phpcs.cache" />
 
-    <config name="php_version" value="80400" />
+    <config name="php_version" value="80500" />
 
     <file>app/</file>
     <file>bootstrap/</file>
