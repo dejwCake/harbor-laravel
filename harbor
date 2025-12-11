@@ -604,6 +604,37 @@ laravel() {
     echo "Laravel install + init complete."
 }
 
+setCraftableStability() {
+    # Ensure composer.json exists before modifying config
+    if [[ -f composer.json ]]; then
+        if ! "${COMPOSE[@]}" run --rm php composer config minimum-stability dev; then
+            echo "Failed to set composer minimum-stability to dev."
+            return 1
+        fi
+        return 0
+    else
+        echo "composer.json not found; skipping minimum-stability change."
+        return 0
+    fi
+}
+
+# Parse flags for craftable setup; returns 1 if --dev was provided, else 0
+parseCraftableFlags() {
+    local DEV=0
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dev)
+                DEV=1
+                shift 1
+                ;;
+            *)
+                shift 1
+                ;;
+        esac
+    done
+    echo "$DEV"
+}
+
 craftable() {
     # Determine flags (e.g., --dev)
     local DEV
