@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ruleset name="Application">
+    <description>Application coding standard.</description>
+
+    <arg value="nsp" />
+    <arg name="cache" value=".phpcs.cache" />
+
+    <config name="php_version" value="80400" />
+
+    <file>app/</file>
+    <file>bootstrap/</file>
+    <file>config/</file>
+    <file>database/</file>
+    <file>lang</file>
+    <file>resources</file>
+    <file>routes</file>
+    <file>tests/</file>
+    <exclude-pattern>bootstrap/cache/*</exclude-pattern>
+
+    <!--not exactly nice, but working solution-->
+    <rule ref="/root/.composer/vendor/dejwcake/php-code-style/base.phpcs.xml">
+    </rule>
+
+    <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
+        <properties>
+            <property name="rootNamespaces" type="array">
+                <element key="app" value="App"/>
+                <element key="database/factories" value="Database\Factories"/>
+                <element key="database/seeders" value="Database\Seeders"/>
+                <element key="tests" value="Tests"/>
+            </property>
+        </properties>
+    </rule>
+</ruleset>

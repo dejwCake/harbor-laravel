@@ -1,0 +1,3 @@
+includes:
+    - phpstan.neon
+    - ./vendor/larastan/larastan/extension.neon

@@ -515,6 +515,11 @@ installLaravel() {
         exit 1
     fi
 
+    echo "Require larastan ..."
+    if ! "${COMPOSE[@]}" run --rm php composer require --dev larastan/larastan; then
+        echo "Failed to require larastan/larastan, but continue."
+    fi
+
     echo "Laravel installed"
 }
 

@@ -1,0 +1,29 @@
+includes:
+	- phpstan-baseline.neon
+
+parameters:
+    level: 5
+    phpVersion: 80400
+    reportUnmatchedIgnoredErrors: false
+    type_coverage:
+        return: 75
+        param: 75
+        property: 75
+        constant: 75
+
+    tmpDir: .phpstan.cache
+
+    paths:
+        - ./app
+        - ./bootstrap
+        - ./config
+        - ./database
+        - ./lang
+        - ./resources
+        - ./routes
+        - ./tests
+
+    ignoreErrors:
+
+    excludePaths:
+        - tests/*/__snapshots__/*
