@@ -2,7 +2,11 @@
 
 This project uses Harbor (Docker Compose) for a consistent local dev environment on macOS/Linux.
 
-## Tip: quick alias
+## How to develop this project
+
+Use the Harbor commands (or direct docker compose equivalents) below to start services, run PHP/Composer, execute tests, QA tools, NPM tasks, and interact with the database.
+
+### Tip: quick alias
 
 Add an alias to shorten commands:
 ```shell
@@ -10,7 +14,7 @@ alias hb='./harbor'
 ```
 Then use `hb` instead of typing `./harbor`. Below, each command shows both hb and direct docker compose forms.
 
-## Quick start
+### Quick start
 
 Start containers:
 ```shell
@@ -36,7 +40,7 @@ Stop containers:
 hb stop
 ```
 
-## Composer
+### Composer
 
 Update dependencies:
 ```shell
@@ -56,7 +60,7 @@ Or:
 docker compose run --rm php-qa composer normalize
 ```
 
-## Run tests
+### Run tests
 
 Run tests with pcov:
 ```shell
@@ -76,7 +80,7 @@ Or:
 docker compose run --rm php ./vendor/bin/phpunit -d pcov.enabled=1 --update-snapshots
 ```
 
-## Run code analysis tools (php-qa)
+### Run code analysis tools (php-qa)
 
 PHP compatibility:
 ```shell
