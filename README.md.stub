@@ -1,0 +1,124 @@
+# Laravel project
+
+This project uses Harbor (Docker Compose) for a consistent local dev environment on macOS/Linux.
+
+## Tip: quick alias
+
+Add an alias to shorten commands:
+```shell
+alias hb='./harbor'
+```
+Then use `hb` instead of typing `./harbor`. Below, each command shows both hb and direct docker compose forms.
+
+## Quick start
+
+Start containers:
+```shell
+hb start
+```
+
+SSH into PHP:
+```shell
+hb ssh php
+```
+Or root:
+```shell
+hb ssh php root
+```
+
+Run Artisan migrate:
+```shell
+hb art migrate
+```
+
+Stop containers:
+```shell
+hb stop
+```
+
+## Composer
+
+Update dependencies:
+```shell
+hb comp update
+```
+Or:
+```shell
+docker compose run --rm php composer update
+```
+
+Composer normalization:
+```shell
+hb cn
+```
+Or:
+```shell
+docker compose run --rm php-qa composer normalize
+```
+
+## Run tests
+
+Run tests with pcov:
+```shell
+hb test -d pcov.enabled=1
+```
+Or:
+```shell
+docker compose run --rm php ./vendor/bin/phpunit -d pcov.enabled=1
+```
+
+Regenerate snapshots:
+```shell
+hb test -d pcov.enabled=1 --update-snapshots
+```
+Or:
+```shell
+docker compose run --rm php ./vendor/bin/phpunit -d pcov.enabled=1 --update-snapshots
+```
+
+## Run code analysis tools (php-qa)
+
+PHP compatibility:
+```shell
+hb cmp
+```
+Or:
+```shell
+docker compose run --rm php-qa phpcs --standard=.phpcs.compatibility.xml --cache=.phpcs.cache
+```
+
+Code style:
+```shell
+hb css
+```
+Or:
+```shell
+docker compose run --rm php-qa phpcs -s --colors --extensions=php
+```
+
+Fix style issues:
+```shell
+hb csf
+```
+Or:
+```shell
+docker compose run --rm php-qa phpcbf -s --colors --extensions=php
+```
+
+Static analysis (phpstan):
+```shell
+hb pst --configuration=phpstan.local.neon
+```
+Or:
+```shell
+docker compose run --rm php-qa phpstan analyse --configuration=phpstan.local.neon
+```
+
+Mess detector (phpmd):
+```shell
+hb pmd ./app,./bootstrap,./config,./database,./lang,./resources,./routes,./tests
+```
+Or:
+```shell
+docker compose run --rm php-qa phpmd ./app,./bootstrap,./config,./database,./lang,./resources,./routes,./tests ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml
+```

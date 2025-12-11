@@ -495,7 +495,6 @@ installLaravel() {
     # use php container to create laravel application
     echo "Creating Laravel application in temporary 'application' folder ..."
     "${COMPOSE[@]}" run --rm php composer create-project laravel/laravel ./application
-    echo "Laravel installed"
 
     # move sail docker-compose.yml to docker-compose-sail.yml
     if [[ -f application/docker-compose.yml ]]; then
@@ -523,6 +522,65 @@ installLaravel() {
     echo "Laravel installed"
 }
 
+# Ensure required .gitignore entries exist (idempotent)
+ensureGitignoreEntries() {
+    local gitignore=".gitignore"
+    local -a lines=(
+        ".phpcs.cache"
+        ".phpstan.cache"
+        "docker-compose.override.yml"
+        "npm-debug.log"
+        "yarn-error.log"
+    )
+
+    # Create .gitignore if missing
+    if [[ ! -f "$gitignore" ]]; then
+        touch "$gitignore"
+    fi
+
+    for entry in "${lines[@]}"; do
+        if ! grep -qxF "$entry" "$gitignore" 2>/dev/null; then
+            echo "$entry" >> "$gitignore"
+        fi
+    done
+}
+
+# Prepend README.md with README.md.stub content (idempotent)
+updateReadmeFromStub() {
+    local readme="README.md"
+    local stub="README.md.stub"
+
+    # Only proceed if stub exists
+    if [[ ! -f "$stub" ]]; then
+        return 0
+    fi
+
+    # Create README.md if missing
+    if [[ ! -f "$readme" ]]; then
+        cp "$stub" "$readme"
+        # Remove stub after applying
+        rm -f "$stub"
+        return 0
+    fi
+
+    # Prepend stub content if not already present at the top
+    # Compare first non-empty lines to detect if stub header exists
+    local stub_first
+    local readme_first
+    stub_first=$(grep -m1 -v '^\s*$' "$stub" || true)
+    readme_first=$(grep -m1 -v '^\s*$' "$readme" || true)
+
+    if [[ "$stub_first" != "$readme_first" ]]; then
+        local tmpfile
+        tmpfile=$(mktemp)
+        cat "$stub" "$readme" > "$tmpfile"
+        mv "$tmpfile" "$readme"
+    fi
+
+    # Remove stub after applying
+    rm -f "$stub"
+}
+
 laravel() {
     echo "Starting Laravel installation and initialization ..."
 
@@ -538,38 +596,12 @@ laravel() {
         exit 1
     fi
 
+    # After Laravel installer may override files, fix .gitignore entries
+    ensureGitignoreEntries
+    # Prepend README with stub content
+    updateReadmeFromStub
+
     echo "Laravel install + init complete."
-}
-
-setCraftableStability() {
-    # Ensure composer.json exists before modifying config
-    if [[ -f composer.json ]]; then
-        if ! "${COMPOSE[@]}" run --rm php composer config minimum-stability dev; then
-            echo "Failed to set composer minimum-stability to dev."
-            return 1
-        fi
-        return 0
-    else
-        echo "composer.json not found; skipping minimum-stability change."
-        return 0
-    fi
-}
-
-# Parse flags for craftable setup; returns 1 if --dev was provided, else 0
-parseCraftableFlags() {
-    local DEV=0
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --dev)
-                DEV=1
-                shift 1
-                ;;
-            *)
-                shift 1
-                ;;
-        esac
-    done
-    echo "$DEV"
 }
 
 craftable() {
@@ -583,6 +615,10 @@ craftable() {
         exit 1
     fi
 
+    # Ensure .gitignore entries after Laravel install
+    ensureGitignoreEntries
+    # Prepend README with stub content
+    updateReadmeFromStub
 
     # Only set composer stability when --dev was provided
     if [[ "$DEV" == "1" ]]; then
