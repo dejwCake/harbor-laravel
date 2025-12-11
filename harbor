@@ -286,17 +286,14 @@ ssh() {
     fi
 
     local service="$1"
-    local user_arg=()
 
     if [[ "$EXEC" == "yes" ]] && [[ "$service" != "node" ]]; then
+        local cmd=("${COMPOSE[@]}" exec)
         if [[ "$service" == "php" ]] && [[ "${2:-}" != "root" ]]; then
-            # docker compose exec expects --user, not -u
-            user_arg=(--user harbor)
+            cmd+=(--user harbor)
         fi
-        "${COMPOSE[@]}" exec \
-            ${user_arg[@]} \
-            "$service" \
-            bash
+        cmd+=("$service" bash)
+        "${cmd[@]}"
     else
         "${COMPOSE[@]}" run --rm \
             "$service" \
