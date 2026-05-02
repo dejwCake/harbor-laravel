@@ -696,6 +696,11 @@ craftable() {
         echo "Failed to composer update, please update manually"
     fi
 
+    echo "Composer normalising ..."
+    if ! "${COMPOSE[@]}" run --rm php-qa composer normalize; then
+        echo "Failed to composer normalize, please do it manually"
+    fi
+
     initNpmCraftable
 
     # stop docker containers
