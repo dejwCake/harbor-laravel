@@ -691,6 +691,11 @@ craftable() {
         exit 1
     fi
 
+    echo "Composer updating ..."
+    if ! "${COMPOSE[@]}" run --rm php composer update; then
+        echo "Failed to composer update, please update manually"
+    fi
+
     initNpmCraftable
 
     # stop docker containers
