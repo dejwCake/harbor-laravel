@@ -701,6 +701,11 @@ craftable() {
         echo "Failed to composer normalize, please do it manually"
     fi
 
+    echo "Fix style based on default config ..."
+    if ! "${COMPOSE[@]}" run --rm php-qa phpcbf -s --colors --extensions=php; then
+        echo "Failed to fix style, please do it manually"
+    fi
+
     initNpmCraftable
 
     # stop docker containers
