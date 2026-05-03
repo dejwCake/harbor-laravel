@@ -656,12 +656,12 @@ craftable() {
     updateReadmeFromStub
 
     # Only set composer stability when --dev was provided
-    if [[ "$DEV" == "1" ]]; then
+#    if [[ "$DEV" == "1" ]]; then
         echo "Setting composer minimum-stability to dev ..."
         if ! setCraftableStability; then
             echo "Setting composer stability failed; continuing, but craftable install may fail."
         fi
-    fi
+#    fi
 
     echo "Require craftable ..."
     if ! "${COMPOSE[@]}" run --rm php composer require dejwcake/craftable; then
