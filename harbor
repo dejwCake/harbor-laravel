@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 TYPE=php
-VERSION=5.1.0
+VERSION=5.1.1
 
 # Make harbor command executable if possible
 if [[ -w ./harbor ]]; then
@@ -672,6 +672,12 @@ craftable() {
     echo "Require admin-generator ..."
     if ! "${COMPOSE[@]}" run --rm php composer require --dev dejwcake/admin-generator; then
         echo "Failed to require dejwcake/admin-generator (dev)."
+        exit 1
+    fi
+
+    echo "Require testing-kit ..."
+    if ! "${COMPOSE[@]}" run --rm php composer require --dev dejwcake/testing-kit; then
+        echo "Failed to require dejwcake/testing-kit (dev)."
         exit 1
     fi
 
