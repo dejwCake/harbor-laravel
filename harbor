@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 TYPE=php
-VERSION=5.1.1
+VERSION=5.1.2
 
 # Make harbor command executable if possible
 if [[ -w ./harbor ]]; then
@@ -860,7 +860,11 @@ main() {
         test)
             shift 1
             export APP_ENV="testing"
-            "${COMPOSE[@]}" run --rm \
+            COMPOSE_TEST=("${COMPOSE[@]}")
+            if [[ -f "docker-compose.test.yml" ]]; then
+                COMPOSE_TEST+=( -f docker-compose.test.yml )
+            fi
+            "${COMPOSE_TEST[@]}" run --rm \
                 php \
                 ./vendor/bin/phpunit "$@"
             ;;
