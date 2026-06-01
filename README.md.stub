@@ -68,17 +68,15 @@ hb test -d pcov.enabled=1
 ```
 Or:
 ```shell
-docker compose run --rm php ./vendor/bin/phpunit -d pcov.enabled=1
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.test.yml run --rm php ./vendor/bin/phpunit -d pcov.enabled=1
 ```
 
-Regenerate snapshots:
+Regenerate snapshots (PHPUnit 12.5.12+ rejects the old `--update-snapshots` flag — spatie reads it from `argv` *after* PHPUnit has already bailed; use the `UPDATE_SNAPSHOTS=true` env var instead):
 ```shell
-hb test -d pcov.enabled=1 --update-snapshots
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.test.yml run --rm -e UPDATE_SNAPSHOTS=true php ./vendor/bin/phpunit -d pcov.enabled=1
 ```
-Or:
-```shell
-docker compose run --rm php ./vendor/bin/phpunit -d pcov.enabled=1 --update-snapshots
-```
+
+> Test env (`APP_ENV=testing`, `CACHE_STORE=array`, `MAIL_MAILER=array`, …) lives in `.env.testing` and is loaded into the container via `docker-compose.test.yml`'s `env_file:` directive. CI uses `docker-compose.ci.test.yml` (same `.env.testing` + image refs + DB block). PHPStorm: add `docker-compose.yml`, `docker-compose.override.yml`, and `docker-compose.test.yml` to the docker-compose interpreter's compose-files list.
 
 ### Run code analysis tools (php-qa)
 
