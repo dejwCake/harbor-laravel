@@ -24,8 +24,7 @@
     <!-- Permanent for laravel and craftable -->
     <rule ref="SlevomatCodingStandard.Files.LineLength.LineTooLong">
         <exclude-pattern>config/advanced-logger.php</exclude-pattern>
-    </rule>
-    <rule ref="SlevomatCodingStandard.Files.LineLength.LineTooLong">
+        <exclude-pattern>database/migrations/*_create_permission_tables.php</exclude-pattern>
         <exclude-pattern>lang/vendor/backup/*</exclude-pattern>
     </rule>
     <rule ref="SlevomatCodingStandard.Functions.UnusedParameter.UnusedParameter">
@@ -35,9 +34,6 @@
         <exclude-pattern>database/migrations/*_create_permission_tables.php</exclude-pattern>
     </rule>
     <rule ref="SlevomatCodingStandard.ControlStructures.DisallowEmpty.DisallowedEmpty">
-        <exclude-pattern>database/migrations/*_create_permission_tables.php</exclude-pattern>
-    </rule>
-    <rule ref="SlevomatCodingStandard.Files.LineLength.LineTooLong">
         <exclude-pattern>database/migrations/*_create_permission_tables.php</exclude-pattern>
     </rule>
 
