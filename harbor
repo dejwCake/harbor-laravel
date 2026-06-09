@@ -362,9 +362,13 @@ initNpm() {
         return 0
     fi
 
-    # Prefer npm ci when a lockfile exists, otherwise npm install
+    # Prefer `npm ci` (exact install from the lock) when a lockfile exists, but
+    # fall back to `npm install` when the lock is out of sync with package.json.
+    # craftable:install adds frontend deps (ckeditor, tiptap, @dejwcake/craftable,
+    # ...) to package.json without regenerating the starter kit's lock, so `npm ci`
+    # would otherwise abort: "can only install ... when ... in sync".
     if [[ -f package-lock.json ]]; then
-        ./harbor npm ci
+        ./harbor npm ci || ./harbor npm install
     else
         ./harbor npm install
     fi
