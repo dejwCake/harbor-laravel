@@ -506,8 +506,7 @@ installLaravel() {
     if [[ -n "$starter" ]]; then
         installLaravelViaInstaller "$starter"
     else
-        echo "Creating Laravel application in temporary 'application' folder ..."
-        "${COMPOSE[@]}" run --rm php composer create-project laravel/laravel ./application
+        installLaravelViaComposer
     fi
 
     finalizeLaravelInstall
@@ -527,6 +526,11 @@ installLaravelViaInstaller() {
         export PATH="$(composer global config home -q)/vendor/bin:$PATH"
         laravel new application '"$kitFlag"'
     '
+}
+
+installLaravelViaComposer() {
+    echo "Creating Laravel application in temporary 'application' folder ..."
+    "${COMPOSE[@]}" run --rm php composer create-project laravel/laravel ./application
 }
 
 # Shared post-create logic for both create-project and installer paths.
@@ -641,26 +645,27 @@ setProjectStability() {
     fi
 }
 
-# Parse create-project flags. Echoes "<dev> <starter>" where dev is 1 if --dev
-# was given (else 0) and starter is the kit ("interactive" for a bare --starter,
-# e.g. "vue" for --starter=vue, empty when absent). Read with:
-#   read DEV STARTER <<< "$(parseProjectFlags "$@")"
+# Parse create-project flags. Assigns the caller-scoped variables DEV (1 if --dev
+# was given, else 0) and STARTER (the kit: "interactive" for a bare --starter,
+# e.g. "vue" for --starter=vue, empty when absent). Call with DEV/STARTER declared
+# local in the caller:
+#   local DEV STARTER; parseProjectFlags "$@"
 parseProjectFlags() {
-    local dev=0 starter=""
+    DEV=0
+    STARTER=""
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --dev)       dev=1;                 shift ;;
-            --starter)   starter="interactive"; shift ;;
-            --starter=*) starter="${1#*=}";     shift ;;
-            *) shift ;;
+            --dev)       DEV=1 ;;
+            --starter)   STARTER="interactive" ;;
+            --starter=*) STARTER="${1#*=}" ;;
         esac
+        shift
     done
-    echo "$dev $starter"
 }
 
 laravel() {
     local DEV STARTER
-    read -r DEV STARTER <<< "$(parseProjectFlags "$@")"
+    parseProjectFlags "$@"
 
     echo "Starting Laravel installation and initialization ..."
 
@@ -695,7 +700,7 @@ laravel() {
 craftable() {
     # Determine flags (e.g., --dev, --starter)
     local DEV STARTER
-    read -r DEV STARTER <<< "$(parseProjectFlags "$@")"
+    parseProjectFlags "$@"
 
     # Install base Laravel application first
     if ! installLaravel "$STARTER"; then
