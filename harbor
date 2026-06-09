@@ -108,6 +108,16 @@ setupEnvVariables() {
     else
         EXEC="no"
     fi
+
+    # Disable pseudo-TTY allocation for `docker compose exec` when stdin is not a
+    # terminal (e.g. running under `install.sh` piped via curl | bash). Without
+    # this, exec fails: "cannot attach stdin to a TTY-enabled container because
+    # stdin is not a terminal". Used unquoted, like ${REMOVE_VOLUMES} below.
+    if [[ -t 0 ]]; then
+        TTY_OFF=""
+    else
+        TTY_OFF="-T"
+    fi
 }
 
 touchHistory() {
@@ -192,7 +202,7 @@ rebuild() {
 
 artisan() {
     if [[ "$EXEC" == "yes" ]]; then
-        "${COMPOSE[@]}" exec \
+        "${COMPOSE[@]}" exec ${TTY_OFF} \
             -u harbor \
             php \
             php artisan "$@"
@@ -205,7 +215,7 @@ artisan() {
 
 composer() {
     if [[ "$EXEC" == "yes" ]]; then
-        "${COMPOSE[@]}" exec \
+        "${COMPOSE[@]}" exec ${TTY_OFF} \
             -u harbor \
             php \
             composer "$@"
@@ -222,7 +232,7 @@ db() {
         DB_COMMAND=(psql -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
         # Prefer MariaDB client if available, fallback to mysql
-        if "${COMPOSE[@]}" exec db sh -c 'command -v mariadb >/dev/null 2>&1'; then
+        if "${COMPOSE[@]}" exec ${TTY_OFF} db sh -c 'command -v mariadb >/dev/null 2>&1'; then
             DB_COMMAND=(mariadb -u "${DB_USERNAME}" -h localhost)
         else
             DB_COMMAND=(mysql -u "${DB_USERNAME}" -h localhost)
@@ -237,7 +247,7 @@ db() {
         return 1
     fi
     if [[ "$EXEC" == "yes" ]]; then
-        "${COMPOSE[@]}" exec \
+        "${COMPOSE[@]}" exec ${TTY_OFF} \
             db \
             "${DB_COMMAND[@]}" "$@"
     else
@@ -253,7 +263,7 @@ dump() {
         DB_COMMAND=(pg_dump -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
     elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
         # Prefer MariaDB dump client if available, fallback to mysqldump
-        if "${COMPOSE[@]}" exec db sh -c 'command -v mariadb-dump >/dev/null 2>&1'; then
+        if "${COMPOSE[@]}" exec ${TTY_OFF} db sh -c 'command -v mariadb-dump >/dev/null 2>&1'; then
             DB_COMMAND=(mariadb-dump -u "${DB_USERNAME}" -h localhost)
         else
             DB_COMMAND=(mysqldump -u "${DB_USERNAME}" -h localhost)
@@ -268,7 +278,7 @@ dump() {
         return 1
     fi
     if [[ "$EXEC" == "yes" ]]; then
-        "${COMPOSE[@]}" exec \
+        "${COMPOSE[@]}" exec ${TTY_OFF} \
             db \
             "${DB_COMMAND[@]}" "$@"
     else
@@ -289,6 +299,7 @@ ssh() {
 
     if [[ "$EXEC" == "yes" ]] && [[ "$service" != "node" ]]; then
         local cmd=("${COMPOSE[@]}" exec)
+        [[ -n "$TTY_OFF" ]] && cmd+=("$TTY_OFF")
         if [[ "$service" == "php" ]] && [[ "${2:-}" != "root" ]]; then
             cmd+=(--user harbor)
         fi
@@ -443,7 +454,7 @@ prepareContainers() {
     ./harbor restart
 
     # Wait for database using helper script provided in images
-    "${COMPOSE[@]}" exec db wait-for-active-database.sh
+    "${COMPOSE[@]}" exec ${TTY_OFF} db wait-for-active-database.sh
 }
 
 initLaravel() {

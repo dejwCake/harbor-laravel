@@ -168,7 +168,9 @@ main() {
     [[ "$DEV" -eq 1 ]] && flags+=(--dev)
 
     echo "Scaffolding ${TYPE} project ..."
-    ./harbor create-project "$TYPE" "${flags[@]}"
+    # ${flags[@]+...} guards against "unbound variable" on bash 3.2 (macOS default)
+    # when the array is empty under `set -u`.
+    ./harbor create-project "$TYPE" ${flags[@]+"${flags[@]}"}
 }
 
 main "$@"
