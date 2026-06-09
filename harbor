@@ -533,7 +533,7 @@ installLaravelViaInstaller() {
         "dejwcake/laravel-installer:${HARBOR_LARAVEL_INSTALLER_VERSION:-latest}" \
         bash -lc '
             set -e
-            laravel new application --teams --boost '"$kitFlag"'
+            laravel new application --teams '"$kitFlag"'
             chown -R '"${HARBOR_USER_UID:-1000}:${HARBOR_USER_UID:-1000}"' application
         '
 }
@@ -554,6 +554,14 @@ finalizeLaravelInstall() {
     # laravel new may run git init in ./application; drop it so it can't
     # clobber/confuse the harbor repo when moved into the project root.
     rm -rf application/.git
+
+    # initNodeModulesDir pre-creates ./node_modules (with a .gitignore), and the
+    # installer (starter-kit) path produces a populated application/node_modules.
+    # `mv` would fail on the non-empty target ("Directory not empty"), so drop the
+    # placeholder and let the populated one relocate cleanly.
+    if [[ -d application/node_modules ]]; then
+        rm -rf ./node_modules
+    fi
 
     # move application content to this folder (include dotfiles)
     echo "Move application contents and remove temp folder"
