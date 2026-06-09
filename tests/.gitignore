@@ -1,0 +1,5 @@
+# Cached download archives (populated by tests/cache.sh or a local build)
+artifacts/
+# Transient per-run scaffolding produced inside the test container
+test-real/
+tmp.*

@@ -5,7 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 TYPE=php
-VERSION=5.1.2
+VERSION=6.0.0
 
 # Make harbor command executable if possible
 if [[ -w ./harbor ]]; then
@@ -480,6 +480,8 @@ initLaravel() {
 }
 
 installLaravel() {
+    local starter="${1:-}"
+
     echo "Installing new laravel application to current folder."
 
     # remove all containers and volumes (tolerate if not running)
@@ -490,14 +492,43 @@ installLaravel() {
     initNodeModulesDir
 
     # use php container to create laravel application
-    echo "Creating Laravel application in temporary 'application' folder ..."
-    "${COMPOSE[@]}" run --rm php composer create-project laravel/laravel ./application
+    if [[ -n "$starter" ]]; then
+        installLaravelViaInstaller "$starter"
+    else
+        echo "Creating Laravel application in temporary 'application' folder ..."
+        "${COMPOSE[@]}" run --rm php composer create-project laravel/laravel ./application
+    fi
 
+    finalizeLaravelInstall
+}
+
+# Create the base Laravel app via the official Laravel installer (starter kits).
+installLaravelViaInstaller() {
+    local starter="$1" kitFlag=""
+    case "$starter" in
+        interactive) kitFlag="" ;;                       # installer prompts
+        *)           kitFlag="--$starter --no-interaction" ;;
+    esac
+    echo "Creating Laravel application via 'laravel new' (starter kit) ..."
+    "${COMPOSE[@]}" run --rm php bash -lc '
+        set -e
+        composer global require laravel/installer
+        export PATH="$(composer global config home -q)/vendor/bin:$PATH"
+        laravel new application '"$kitFlag"'
+    '
+}
+
+# Shared post-create logic for both create-project and installer paths.
+finalizeLaravelInstall() {
     # move sail docker-compose.yml to docker-compose-sail.yml
     if [[ -f application/docker-compose.yml ]]; then
         echo "Move sail docker-compose.yml to docker-compose-sail.yml"
         mv application/docker-compose.yml application/docker-compose-sail.yml
     fi
+
+    # laravel new may run git init in ./application; drop it so it can't
+    # clobber/confuse the harbor repo when moved into the project root.
+    rm -rf application/.git
 
     # move application content to this folder (include dotfiles)
     echo "Move application contents and remove temp folder"
@@ -585,12 +616,54 @@ updateReadmeFromStub() {
     rm -f "$stub"
 }
 
+setProjectStability() {
+    # Ensure composer.json exists before modifying config
+    if [[ -f composer.json ]]; then
+        if ! "${COMPOSE[@]}" run --rm php composer config minimum-stability dev; then
+            echo "Failed to set composer minimum-stability to dev."
+            return 1
+        fi
+        return 0
+    else
+        echo "composer.json not found; skipping minimum-stability change."
+        return 0
+    fi
+}
+
+# Parse create-project flags. Echoes "<dev> <starter>" where dev is 1 if --dev
+# was given (else 0) and starter is the kit ("interactive" for a bare --starter,
+# e.g. "vue" for --starter=vue, empty when absent). Read with:
+#   read DEV STARTER <<< "$(parseProjectFlags "$@")"
+parseProjectFlags() {
+    local dev=0 starter=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dev)       dev=1;                 shift ;;
+            --starter)   starter="interactive"; shift ;;
+            --starter=*) starter="${1#*=}";     shift ;;
+            *) shift ;;
+        esac
+    done
+    echo "$dev $starter"
+}
+
 laravel() {
+    local DEV STARTER
+    read -r DEV STARTER <<< "$(parseProjectFlags "$@")"
+
     echo "Starting Laravel installation and initialization ..."
 
-    if ! installLaravel; then
+    if ! installLaravel "$STARTER"; then
         echo "Laravel installation failed. Aborting."
         exit 1
+    fi
+
+    # Only set composer stability when --dev was provided
+    if [[ "$DEV" == "1" ]]; then
+        echo "Setting composer minimum-stability to dev ..."
+        if ! setProjectStability; then
+            echo "Setting composer stability failed; continuing."
+        fi
     fi
 
     echo "Laravel initializing ..."
@@ -608,44 +681,13 @@ laravel() {
     echo "Laravel install + init complete."
 }
 
-setCraftableStability() {
-    # Ensure composer.json exists before modifying config
-    if [[ -f composer.json ]]; then
-        if ! "${COMPOSE[@]}" run --rm php composer config minimum-stability dev; then
-            echo "Failed to set composer minimum-stability to dev."
-            return 1
-        fi
-        return 0
-    else
-        echo "composer.json not found; skipping minimum-stability change."
-        return 0
-    fi
-}
-
-# Parse flags for craftable setup; returns 1 if --dev was provided, else 0
-parseCraftableFlags() {
-    local DEV=0
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --dev)
-                DEV=1
-                shift 1
-                ;;
-            *)
-                shift 1
-                ;;
-        esac
-    done
-    echo "$DEV"
-}
-
 craftable() {
-    # Determine flags (e.g., --dev)
-    local DEV
-    DEV="$(parseCraftableFlags "$@")"
+    # Determine flags (e.g., --dev, --starter)
+    local DEV STARTER
+    read -r DEV STARTER <<< "$(parseProjectFlags "$@")"
 
     # Install base Laravel application first
-    if ! installLaravel; then
+    if ! installLaravel "$STARTER"; then
         echo "Laravel installation failed. Aborting craftable setup."
         exit 1
     fi
@@ -658,7 +700,7 @@ craftable() {
     # Only set composer stability when --dev was provided
 #    if [[ "$DEV" == "1" ]]; then
         echo "Setting composer minimum-stability to dev ..."
-        if ! setCraftableStability; then
+        if ! setProjectStability; then
             echo "Setting composer stability failed; continuing, but craftable install may fail."
         fi
 #    fi
@@ -737,8 +779,8 @@ Harbor commands:
   dump [args]              - run pg_dump/mysqldump in db container
   ssh <service> [root]     - bash into service (php defaults to user 'harbor' unless 'root')
   init laravel|craftable   - initialize existing project
-  create-project laravel   - create new laravel app
-  create-project craftable [--dev] - create craftable app (optional --dev sets composer minimum-stability dev)
+  create-project laravel [--dev] [--starter[=react|svelte|vue|livewire]]   - create new laravel app (optionally with an official starter kit; --dev sets composer minimum-stability dev)
+  create-project craftable [--dev] [--starter[=react|svelte|vue|livewire]] - create craftable app (--dev sets composer minimum-stability dev)
   exec/run [args]          - passthrough to docker compose exec/run
 
   # QA commands (php-qa container)
@@ -992,7 +1034,8 @@ main() {
 
             # Installing new laravel project
             laravel)
-                laravel
+                shift 2
+                laravel "$@"
                 ;;
 
             # Installing new craftable project

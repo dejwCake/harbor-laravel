@@ -12,6 +12,57 @@ This harbor provides docker configuration for your project. It is based on vesse
 
 This script handles the current instance. To create new, install or update harbor, use harbor installer.
 
+## Quick install (curl | bash)
+
+Scaffold a brand-new Harbor-based project in one line with `install.sh`. It downloads
+the Harbor tooling, lays it into the target directory, optionally pins the PHP version,
+then runs `./harbor create-project` for you. Requires `curl`, `tar`, and a running Docker.
+
+```bash
+# Laravel
+curl -fsSL https://raw.githubusercontent.com/dejwCake/harbor-laravel/main/install.sh \
+  | bash -s -- laravel myapp [options]
+
+# Craftable
+curl -fsSL https://raw.githubusercontent.com/dejwCake/harbor-laravel/main/install.sh \
+  | bash -s -- craftable myapp [options]
+```
+
+`<path>` (here `myapp`) is required and must be empty or non-existent.
+
+### Options
+
+| Option | Description |
+| --- | --- |
+| `-b=<branch>`, `--branch=<branch>` | Harbor branch to fetch (default: `main`) |
+| `-t=<tag>`, `--tag=<tag>` | Harbor tag to fetch (alias of `--branch`/`--ref`) |
+| `--ref=<ref>` | Branch, tag, or commit SHA (default: `main`) |
+| `-p=<ver>`, `--php=<ver>` | PHP version: `8.2`, `8.3`, `8.4`, `8.5` |
+| `--dev` | Set composer `minimum-stability dev` (laravel + craftable) |
+| `--starter[=react\|vue\|livewire\|svelte]` | Use an official Laravel starter kit |
+| `--skip-create` | Lay down the Harbor tooling only; skip `create-project` |
+| `-h`, `--help` | Show help |
+
+Examples:
+
+```bash
+# Laravel 8.4 with the Vue/Inertia starter kit
+curl -fsSL .../install.sh | bash -s -- laravel myapp --php=8.4 --starter=vue
+
+# Craftable on a specific tag, dev stability
+curl -fsSL .../install.sh | bash -s -- craftable myapp -t=v6.0.0 --dev
+```
+
+### Caveats
+
+- **Interactive starter selection needs a real terminal.** When piping the script
+  through `curl | bash`, the script body occupies stdin, so a bare `--starter`
+  (interactive picker) is rejected — pass an explicit kit, e.g. `--starter=react`.
+  A bare `--starter` works only when you run a downloaded copy of the script directly.
+- **Docker must be running** for the `create-project` step (not needed with `--skip-create`).
+- `install.sh` and the `tests/` folder are stripped from the scaffolded project; the
+  Harbor docs are preserved as `harbor-README.md`.
+
 ## Tip: command alias
 
 For convenience, you can use a short alias:
