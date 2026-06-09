@@ -520,19 +520,22 @@ installLaravelViaInstaller() {
         *)           kitFlag="--$starter --no-interaction" ;;
     esac
     echo "Creating Laravel application via 'laravel new' (starter kit) ..."
-    # --no-node: the php container has no Node, so skip the installer's own
-    # `npm install && npm run build`. Harbor builds the starter kit frontend
-    # afterwards via initNpm, which runs in the dedicated node container.
-    #
-    # dev-master: --no-node only exists on laravel/installer's master branch; it
-    # is not in any stable release yet (latest is v5.28.1). Pin to dev-master
-    # until --no-node ships in a tagged release, then drop the ":dev-master".
-    "${COMPOSE[@]}" run --rm php bash -lc '
-        set -e
-        composer global require laravel/installer:dev-master
-        export PATH="$(composer global config home -q)/vendor/bin:$PATH"
-        laravel new application --no-node --teams --boost '"$kitFlag"'
-    '
+    # Run the dedicated installer image directly (not as a compose service: it is
+    # only needed at scaffold time). It bundles the laravel installer plus node +
+    # npm, so the starter kits' in-scaffold `npm install` works (the php container
+    # has no node). It runs as root, so chown the result to HARBOR_USER_UID to
+    # keep host/file ownership consistent. Default bridge network = no dependency
+    # on harbornet existing yet; the installer only needs outbound internet.
+    local -a runFlags=(--rm)
+    [[ -t 0 ]] && runFlags+=(-it)   # allocate a TTY only for interactive use
+    docker run "${runFlags[@]}" \
+        -v "$(pwd)":/var/www/html \
+        "dejwcake/laravel-installer:${HARBOR_LARAVEL_INSTALLER_VERSION:-latest}" \
+        bash -lc '
+            set -e
+            laravel new application --teams --boost '"$kitFlag"'
+            chown -R '"${HARBOR_USER_UID:-1000}:${HARBOR_USER_UID:-1000}"' application
+        '
 }
 
 installLaravelViaComposer() {
