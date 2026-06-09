@@ -353,7 +353,12 @@ hasNpmScript() {
     fi
 }
 
+# initNpm [forceInstall]
+# Pass a non-empty first arg to force `npm install` and skip `npm ci` entirely,
+# for cases where the lock is known to be out of sync with package.json.
 initNpm() {
+    local forceInstall="${1:-}"
+
     echo "Npm ..."
 
     # Verify package.json exists before installing
@@ -362,12 +367,12 @@ initNpm() {
         return 0
     fi
 
-    # Prefer `npm ci` (exact install from the lock) when a lockfile exists, but
-    # fall back to `npm install` when the lock is out of sync with package.json.
-    # craftable:install adds frontend deps (ckeditor, tiptap, @dejwcake/craftable,
-    # ...) to package.json without regenerating the starter kit's lock, so `npm ci`
-    # would otherwise abort: "can only install ... when ... in sync".
-    if [[ -f package-lock.json ]]; then
+    # Prefer `npm ci` (exact install from the lock) when a lockfile exists and the
+    # caller hasn't forced install; fall back to `npm install` if the lock is out
+    # of sync. craftable forces install (see initNpmCraftable) because
+    # craftable:install adds frontend deps to package.json without regenerating
+    # the starter kit's lock, which would make `npm ci` always abort.
+    if [[ -z "$forceInstall" && -f package-lock.json ]]; then
         ./harbor npm ci || ./harbor npm install
     else
         ./harbor npm install
@@ -384,7 +389,9 @@ initNpm() {
 }
 
 initNpmCraftable() {
-  initNpm
+  # Force `npm install`: craftable:install added deps to package.json without
+  # updating the starter kit's lock, so `npm ci` would always fail here.
+  initNpm install
 
   # Run craftable-dev only if script exists
   if hasNpmScript "craftable-dev"; then
