@@ -2,7 +2,6 @@
 
 # Safer bash settings
 set -euo pipefail
-IFS=$'\n\t'
 
 TYPE=php
 VERSION=6.0.0
@@ -389,16 +388,16 @@ initNpm() {
 }
 
 initNpmCraftable() {
-  # Force `npm install`: craftable:install added deps to package.json without
-  # updating the starter kit's lock, so `npm ci` would always fail here.
-  initNpm install
+    # Force `npm install`: craftable:install added deps to package.json without
+    # updating the starter kit's lock, so `npm ci` would always fail here.
+    initNpm install
 
-  # Run craftable-dev only if script exists
-  if hasNpmScript "craftable-dev"; then
-    ./harbor npm run craftable-dev
-  else
-    echo "No craftable-dev script found in package.json, skipping."
-  fi
+    # Run craftable-dev only if script exists
+    if hasNpmScript "craftable-dev"; then
+        ./harbor npm run craftable-dev
+    else
+        echo "No craftable-dev script found in package.json, skipping."
+    fi
 }
 
 prepareEnv() {
@@ -861,7 +860,7 @@ main() {
 
         # Get type
         -t | --type)
-            echo ${TYPE}
+            echo "${TYPE}"
             exit 0
             ;;
 
