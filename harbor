@@ -527,7 +527,7 @@ installLaravelViaInstaller() {
         set -e
         composer global require laravel/installer
         export PATH="$(composer global config home -q)/vendor/bin:$PATH"
-        laravel new application --no-node '"$kitFlag"'
+        laravel new application --no-node --teams --boost '"$kitFlag"'
     '
 }
 
