@@ -520,11 +520,14 @@ installLaravelViaInstaller() {
         *)           kitFlag="--$starter --no-interaction" ;;
     esac
     echo "Creating Laravel application via 'laravel new' (starter kit) ..."
+    # --no-node: the php container has no Node, so skip the installer's own
+    # `npm install && npm run build`. Harbor builds the starter kit frontend
+    # afterwards via initNpm, which runs in the dedicated node container.
     "${COMPOSE[@]}" run --rm php bash -lc '
         set -e
         composer global require laravel/installer
         export PATH="$(composer global config home -q)/vendor/bin:$PATH"
-        laravel new application '"$kitFlag"'
+        laravel new application --no-node '"$kitFlag"'
     '
 }
 
