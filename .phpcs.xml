@@ -36,6 +36,10 @@
     <rule ref="SlevomatCodingStandard.ControlStructures.DisallowEmpty.DisallowedEmpty">
         <exclude-pattern>database/migrations/*_create_permission_tables.php</exclude-pattern>
     </rule>
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingAnyTypeHint">
+        <exclude-pattern>app/Http/Middleware</exclude-pattern>
+        <exclude-pattern>app/Models</exclude-pattern>
+    </rule>
 
     <rule ref="SlevomatCodingStandard.Files.TypeNameMatchesFileName">
         <properties>

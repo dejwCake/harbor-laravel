@@ -353,8 +353,6 @@ hasNpmScript() {
 }
 
 # initNpm [forceInstall]
-# Pass a non-empty first arg to force `npm install` and skip `npm ci` entirely,
-# for cases where the lock is known to be out of sync with package.json.
 initNpm() {
     local forceInstall="${1:-}"
 
@@ -366,11 +364,6 @@ initNpm() {
         return 0
     fi
 
-    # Prefer `npm ci` (exact install from the lock) when a lockfile exists and the
-    # caller hasn't forced install; fall back to `npm install` if the lock is out
-    # of sync. craftable forces install (see initNpmCraftable) because
-    # craftable:install adds frontend deps to package.json without regenerating
-    # the starter kit's lock, which would make `npm ci` always abort.
     if [[ -z "$forceInstall" && -f package-lock.json ]]; then
         ./harbor npm ci || ./harbor npm install
     else
@@ -530,12 +523,7 @@ installLaravelViaInstaller() {
         *)           kitFlag="--$starter --no-interaction" ;;
     esac
     echo "Creating Laravel application via 'laravel new' (starter kit) ..."
-    # Run the dedicated installer image directly (not as a compose service: it is
-    # only needed at scaffold time). It bundles the laravel installer plus node +
-    # npm, so the starter kits' in-scaffold `npm install` works (the php container
-    # has no node). It runs as root, so chown the result to HARBOR_USER_UID to
-    # keep host/file ownership consistent. Default bridge network = no dependency
-    # on harbornet existing yet; the installer only needs outbound internet.
+    # Run the dedicated installer image directly due php and node required during starter kit install
     local -a runFlags=(--rm)
     [[ -t 0 ]] && runFlags+=(-it)   # allocate a TTY only for interactive use
     docker run "${runFlags[@]}" \
@@ -590,7 +578,48 @@ finalizeLaravelInstall() {
         echo "Failed to require larastan/larastan, but continue."
     fi
 
+    # The Livewire starter kit's resources/css/app.css @imports Flux's CSS from
+    # vendor/; expose that package to the node container (see helper).
+    ensureFluxNodeMount
+
     echo "Laravel installed"
+}
+
+# Add a bind mount for a single vendor package to the node service, on top of the
+# empty-vendor mask, so the Vite build can resolve files shipped inside it.
+# Idempotent. Args: <package path under vendor/, e.g. livewire/flux>
+addNodeVendorMount() {
+    local pkg="$1"
+    local compose="docker-compose.yml"
+    local mount="      - ./vendor/${pkg}:/var/www/html/vendor/${pkg}:delegated"
+
+    [[ -f "$compose" ]] || return 0
+    # Already present?
+    grep -qF "./vendor/${pkg}:/var/www/html/vendor/${pkg}" "$compose" && return 0
+
+    local tmp
+    tmp="$(mktemp)"
+    # Insert right after the node service's empty-vendor mount line. Anchoring the
+    # match at end-of-line keeps it from matching nested paths, and the top-level
+    # `empty-vendor:` volume declaration (no leading "- ") is left untouched.
+    awk -v ins="$mount" '
+        { print }
+        $0 ~ /- empty-vendor:\/var\/www\/html\/vendor$/ { print ins }
+    ' "$compose" > "$tmp" && mv "$tmp" "$compose"
+}
+
+# The Livewire starter kit masks vendor/ in the node container (empty-vendor),
+# but its app.css @imports flux.css from vendor/ and @sources Flux's Blade stubs
+# there, so the Vite build fails to resolve them. Expose the Flux package(s) on
+# top of the mask. Detected via the app.css import so it also fires when Livewire
+# is chosen interactively, and stays a no-op for React/Vue/Svelte/no-starter.
+ensureFluxNodeMount() {
+    grep -q "vendor/livewire/flux/dist/flux.css" resources/css/app.css 2>/dev/null || return 0
+
+    echo "Livewire/Flux detected: exposing Flux package to the node container ..."
+    addNodeVendorMount "livewire/flux"
+    # Flux Pro ships its CSS/stubs the same way; mount it too when installed.
+    [[ -d vendor/livewire/flux-pro ]] && addNodeVendorMount "livewire/flux-pro"
 }
 
 # Ensure required .gitignore entries exist (idempotent)
@@ -673,11 +702,6 @@ setProjectStability() {
     fi
 }
 
-# Parse create-project flags. Assigns the caller-scoped variables DEV (1 if --dev
-# was given, else 0) and STARTER (the kit: "interactive" for a bare --starter,
-# e.g. "vue" for --starter=vue, empty when absent). Call with DEV/STARTER declared
-# local in the caller:
-#   local DEV STARTER; parseProjectFlags "$@"
 parseProjectFlags() {
     DEV=0
     STARTER=""
@@ -741,13 +765,15 @@ craftable() {
     # Prepend README with stub content
     updateReadmeFromStub
 
-    # Only set composer stability when --dev was provided
-#    if [[ "$DEV" == "1" ]]; then
+    # craftable always needs dev stability (e.g. maatwebsite/excel resolves to
+    # 4.x-dev), so force it on regardless of the --dev flag.
+    DEV=1
+    if [[ "$DEV" == "1" ]]; then
         echo "Setting composer minimum-stability to dev ..."
         if ! setProjectStability; then
             echo "Setting composer stability failed; continuing, but craftable install may fail."
         fi
-#    fi
+    fi
 
     echo "Require craftable ..."
     if ! "${COMPOSE[@]}" run --rm php composer require dejwcake/craftable; then
