@@ -45,7 +45,7 @@ services:
   db:
     image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-12.2}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
     ports:
-      - "${HARBOR_DB_PORT:-3306}:${HARBOR_DB_PORT:-3306}"
+      - "${HARBOR_DB_EXTERNAL_PORT:-3306}:${HARBOR_DB_PORT:-3306}"
     environment:
       MYSQL_DATABASE: "${DB_DATABASE:-laravel}"
       MYSQL_USER: "${DB_USERNAME:-root}"
@@ -62,8 +62,6 @@ services:
 
   db-testing:
     image: dejwcake/mariadb${HARBOR_MARIADB_VERSION:-12.2}:${HARBOR_MARIADB_CONTAINER_VERSION:-1}
-    ports:
-      - "${HARBOR_DB_TESTING_PORT:-3307}:${HARBOR_DB_PORT:-3306}"
     environment:
       MYSQL_DATABASE: "${DB_DATABASE:-laravel}"
       MYSQL_USER: "${DB_USERNAME:-root}"

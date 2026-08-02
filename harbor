@@ -146,7 +146,7 @@ prepareExternalVolumes() {
 
 testRunningContainers() {
     if [[ -n $(docker ps -q) ]]; then
-        echo "You have some running containers. Are you sure that they are not blocking required ports: $HARBOR_WEB_PORT, $HARBOR_DB_PORT, $HARBOR_DB_TESTING_PORT ?"
+        echo "You have some running containers. Are you sure that they are not blocking required ports: $HARBOR_WEB_PORT, $HARBOR_DB_EXTERNAL_PORT ?"
         printf "Do you wish to continue (y/n)? "
         local answer
         read -r -n1 answer
