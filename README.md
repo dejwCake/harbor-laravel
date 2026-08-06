@@ -73,6 +73,12 @@ Then use `hb` instead of `./harbor` in the commands below.
 
 ## Upgrade guide ##
 
+### From 5 to 6 ###
+
+As Harbor 6 uses the same structure as v5, values are introduced and some are missing. Change values in `.env.harbor`:
+1. Add `HARBOR_DB_EXTERNAL_PORT` and set it according your setup
+2. Remove `HARBOR_DB_TESTING_PORT` as it is not used anymore
+
 ### From 4 to 5 ###
 
 As Harbor 5 uses the same structure as v4, only some new files, so the upgrade is simple. The main difference internal changes in the commands.
@@ -147,6 +153,7 @@ MariaDB 11.4
 MariaDB 11.8
 MariaDB 12.0
 MariaDB 12.1
+MariaDB 12.2
 
 Postgres 14
 Postgres 15
@@ -166,16 +173,15 @@ Currently, we support only MariaDB and Postgres. By default, MariaDB is prepared
 In file `.env.harbor` you have to change the config for DB. Comment out Mysql/Mariadb part and uncomment Postgres part. Example:
 
 ```
+HARBOR_DB_EXTERNAL_PORT=3306
 # Mysql/Mariadb
 #HARBOR_DB_CONNECTION=mysql
 #HARBOR_DB_PORT=3306
-#HARBOR_DB_TESTING_PORT=3307
 #HARBOR_DB_DATA_PATH=/usr/local/lib/mysql
 #HARBOR_DB_USER=mysql
 # Postgres
 HARBOR_DB_CONNECTION=pgsql
 HARBOR_DB_PORT=5432
-HARBOR_DB_TESTING_PORT=5433
 HARBOR_DB_DATA_PATH=/var/lib/postgresql/data
 HARBOR_DB_USER=postgres
 ```
