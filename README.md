@@ -161,9 +161,9 @@ Postgres 16
 Postgres 17
 Postgres 18
 
-Node 20
 Node 22
 Node 24
+Node 26
 ```
 
 ## Databases ##
