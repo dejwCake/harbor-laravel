@@ -147,13 +147,10 @@ PHP 8.3
 PHP 8.4
 PHP 8.5
 
-MariaDB 10.6
 MariaDB 10.11
 MariaDB 11.4
 MariaDB 11.8
-MariaDB 12.0
-MariaDB 12.1
-MariaDB 12.2
+MariaDB 12.3
 
 Postgres 14
 Postgres 15
