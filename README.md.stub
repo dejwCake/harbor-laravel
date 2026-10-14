@@ -91,11 +91,11 @@ docker compose run --rm php-qa phpcbf -s --colors --extensions=php
 
 Static analysis (phpstan):
 ```shell
-hb pst --configuration=phpstan.local.neon
+hb pst
 ```
 Or:
 ```shell
-docker compose run --rm php-qa phpstan analyse --configuration=phpstan.local.neon
+docker compose run --rm php-qa phpstan analyse
 ```
 
 Mess detector (phpmd):
@@ -141,7 +141,7 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 Run every PHP check and the test suite in sequence (stops at the first failure):
 ```shell
 hb comp update && hb cn \
-  && hb cmp && hb css && hb pst --configuration=phpstan.local.neon \
+  && hb cmp && hb css && hb pst \
   && hb pmd \
   && hb test
 ```
@@ -151,7 +151,7 @@ docker compose run --rm php composer update \
   && docker compose run --rm php-qa composer normalize \
   && docker compose run --rm php-qa phpcs --standard=.phpcs.compatibility.xml --cache=.phpcs.cache \
   && docker compose run --rm php-qa phpcs -s --colors --extensions=php \
-  && docker compose run --rm php-qa phpstan analyse --configuration=phpstan.local.neon \
+  && docker compose run --rm php-qa phpstan analyse \
   && docker compose run --rm php-qa phpmd analyze \
   && docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.test.yml run --rm php ./vendor/bin/phpunit
 ```

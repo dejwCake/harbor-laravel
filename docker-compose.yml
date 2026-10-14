@@ -16,6 +16,7 @@ services:
     image: dejwcake/php${HARBOR_PHP_VERSION:-8.5}:${HARBOR_PHP_CONTAINER_VERSION:-2}
     environment:
       APP_ENV: "${APP_ENV:-local}"
+      HARBOR_WEB_PORT: "${HARBOR_WEB_PORT:-80}"
       XDEBUG_HOST: "${HARBOR_XDEBUG_HOST:-host.docker.internal}"
       HARBOR_XDEBUG: "${HARBOR_XDEBUG:-off}"
       HARBOR_USER_UID: "${HARBOR_USER_UID:-1000}"
@@ -37,6 +38,9 @@ services:
 
   php-qa:
     image: dejwcake/phpqa${HARBOR_PHP_QA_VERSION:-8.5}:${HARBOR_PHP_QA_CONTAINER_VERSION:-1}
+    environment:
+      APP_ENV: "${APP_ENV:-local}"
+      HARBOR_WEB_PORT: "${HARBOR_WEB_PORT:-80}"
     volumes:
       - .:/var/www/html:delegated
     networks:
