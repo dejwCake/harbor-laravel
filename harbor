@@ -4,7 +4,7 @@
 set -euo pipefail
 
 TYPE=php
-VERSION=6.0.0
+VERSION=6.1.0
 
 # Make harbor command executable if possible
 if [[ -w ./harbor ]]; then
@@ -627,6 +627,7 @@ ensureGitignoreEntries() {
     local gitignore=".gitignore"
     local -a lines=(
         ".phpcs.cache"
+        ".phpmd.result-cache.php"
         ".phpstan.cache"
         "docker-compose.override.yml"
         "npm-debug.log"
@@ -857,7 +858,7 @@ Harbor commands:
   css [paths]              - phpcs (code style) with -s --colors --extensions=php
   csf [paths]              - phpcbf (code style fixer) with -s --colors --extensions=php
   pst [args]               - phpstan analyse --configuration=phpstan.neon
-  pmd <dirs> [args]        - phpmd <dirs> ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml
+  pmd [paths] [args]       - phpmd analyze (options from phpmd.yml)
   dpt [args]               - deptrac analyze
   rector [args]            - rector (run refactoring rules)
   cmp [args]               - phpcs with .phpcs.compatibility.xml (compatibility standard)
@@ -998,9 +999,7 @@ main() {
 
         phpmd|pmd)
             shift 1
-            DIRS=$1
-            shift 1
-            "${COMPOSE[@]}" run --rm php-qa phpmd ${DIRS} ansi phpmd.xml --suffixes php --baseline-file phpmd.baseline.xml "$@"
+            "${COMPOSE[@]}" run --rm php-qa phpmd analyze ${@//,/ }
             ;;
 
         deptrac|dpt)

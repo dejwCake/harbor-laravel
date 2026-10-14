@@ -1,0 +1,21 @@
+# PHPMD configuration, see https://phpmd.org/documentation/creating-a-ruleset.html
+name: 'Package PHPMD ruleset'
+paths:
+  - app
+  - bootstrap
+  - config
+  - database
+  - lang
+  - resources
+  - routes
+  - tests
+format: ansi
+suffixes:
+  - php
+baseline-file: phpmd.baseline.xml
+exclude-pattern:
+  - 'tests/*/__snapshots__/*.php'
+rules:
+  - ref: rulesets/codesize.xml
+  - ref: rulesets/controversial.xml
+  - ref: rulesets/design.xml

@@ -251,7 +251,7 @@ In this section you can find all commands supported by harbor:
 
 `harbor pst` will run phpstan analyse (php-qa container). All additional arguments are passed to command.
 
-`harbor pmd` will run phpmd on the php-qa container with dir list argument. All additional arguments are passed to command.
+`harbor pmd` will run phpmd analyze on the php-qa container. Paths, format, baseline and excludes come from `phpmd.yml`; pass paths (space or comma separated) to analyse only those. All additional arguments are passed to command.
 
 `harbor dpt` will run deptrac analyze (php-qa container). All additional arguments are passed to command.
 

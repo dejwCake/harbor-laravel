@@ -31,7 +31,7 @@
 ./harbor
 ./harbor-README.md
 ./phpmd.baseline.xml
-./phpmd.xml
+./phpmd.yml
 ./phpstan-baseline.neon
 ./phpstan.local.neon
 ./phpstan.neon
