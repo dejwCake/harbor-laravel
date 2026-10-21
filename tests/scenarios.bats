@@ -32,6 +32,13 @@ snapshot_env_php_versions() {
 validate_or_init() {
   # Args: pairs of current:expected
   local init_needed=0
+  if [ "${UPDATE_SNAPSHOTS:-0}" -eq 1 ]; then
+    for pair in "$@"; do
+      cp "${pair%%:*}" "${pair##*:}"
+    done
+    skip "Regenerated expected snapshots for scenario"
+  fi
+
   for pair in "$@"; do
     local expected="${pair##*:}"
     [ -f "$expected" ] || init_needed=1
@@ -73,7 +80,7 @@ run_scenario() {
   local dir="/workspace/test-real/${name}"
   rm -rf "$dir"
 
-  run /usr/bin/env bash /workspace/install.sh "$type" "$dir" --skip-create "$@"
+  run /usr/bin/env bash /workspace/install.sh "$type" "$dir" --skip-create --ref="${HARBOR_REF:-main}" "$@"
   [ "$status" -eq 0 ]
 
   # Harbor docs preserved; bootstrap-only artifacts stripped from the project.

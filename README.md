@@ -78,6 +78,7 @@ Then use `hb` instead of `./harbor` in the commands below.
 As Harbor 6 uses the same structure as v5, values are introduced and some are missing. Change values in `.env.harbor`:
 1. Add `HARBOR_DB_EXTERNAL_PORT` and set it according your setup
 2. Remove `HARBOR_DB_TESTING_PORT` as it is not used anymore
+3. Change `HARBOR_DB_CONNECTION=mysql` to `HARBOR_DB_CONNECTION=mariadb`, and also `DB_CONNECTION=mysql` to `DB_CONNECTION=mariadb` in `.env` and `.env.testing`, so Laravel uses its `mariadb` driver
 
 ### From 4 to 5 ###
 
@@ -167,12 +168,12 @@ Node 26
 
 Currently, we support only MariaDB and Postgres. By default, MariaDB is prepared. To change to Postgres you have to modify `docker-compose.override.yml` file, the snippet is already there. Just uncomment required parts.
 
-In file `.env.harbor` you have to change the config for DB. Comment out Mysql/Mariadb part and uncomment Postgres part. Example:
+In file `.env.harbor` you have to change the config for DB. Comment out Mariadb part and uncomment Postgres part. Example:
 
 ```
 HARBOR_DB_EXTERNAL_PORT=3306
-# Mysql/Mariadb
-#HARBOR_DB_CONNECTION=mysql
+# Mariadb
+#HARBOR_DB_CONNECTION=mariadb
 #HARBOR_DB_PORT=3306
 #HARBOR_DB_DATA_PATH=/usr/local/lib/mysql
 #HARBOR_DB_USER=mysql
@@ -185,7 +186,7 @@ HARBOR_DB_USER=postgres
 
 ### CLI clients used by harbor
 
-- MariaDB/MySQL: modern MariaDB images provide `mariadb` and `mariadb-dump`. The harbor script prefers these clients and falls back to `mysql`/`mysqldump` if not available.
+- MariaDB: `mariadb` and `mariadb-dump`.
 - PostgreSQL: `psql` and `pg_dump`.
 
 Examples:

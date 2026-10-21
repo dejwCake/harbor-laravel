@@ -20,6 +20,7 @@
 ./.harbor/nginx
 ./.harbor/nginx/conf.d
 ./.harbor/nginx/conf.d/body-size.conf
+./.harbor/nginx/conf.d/fastcgi-buffers.conf
 ./.harbor/ssh
 ./.harbor/ssh/.gitignore
 ./.phpcs.compatibility.xml

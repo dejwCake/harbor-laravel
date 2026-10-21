@@ -4,7 +4,7 @@
 set -euo pipefail
 
 TYPE=php
-VERSION=6.1.0
+VERSION=6.2.0
 
 # Make harbor command executable if possible
 if [[ -w ./harbor ]]; then
@@ -229,7 +229,7 @@ db() {
     local DB_COMMAND
     if [[ ${HARBOR_DB_CONNECTION} == "pgsql" ]]; then
         DB_COMMAND=(psql -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
-    elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
+    elif [[ ${HARBOR_DB_CONNECTION} == "mariadb" || ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
         # Prefer MariaDB client if available, fallback to mysql
         if "${COMPOSE[@]}" exec ${TTY_OFF} db sh -c 'command -v mariadb >/dev/null 2>&1'; then
             DB_COMMAND=(mariadb -u "${DB_USERNAME}" -h localhost)
@@ -260,7 +260,7 @@ dump() {
     local DB_COMMAND
     if [[ ${HARBOR_DB_CONNECTION} == "pgsql" ]]; then
         DB_COMMAND=(pg_dump -U "${DB_USERNAME}" -h localhost "${DB_DATABASE}")
-    elif [[ ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
+    elif [[ ${HARBOR_DB_CONNECTION} == "mariadb" || ${HARBOR_DB_CONNECTION} == "mysql" ]]; then
         # Prefer MariaDB dump client if available, fallback to mysqldump
         if "${COMPOSE[@]}" exec ${TTY_OFF} db sh -c 'command -v mariadb-dump >/dev/null 2>&1'; then
             DB_COMMAND=(mariadb-dump -u "${DB_USERNAME}" -h localhost)
