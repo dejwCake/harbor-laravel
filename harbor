@@ -93,6 +93,10 @@ setupEnvVariables() {
     fi
     export HARBOR_XDEBUG_HOST
 
+    # xdebug server name for the IDE, unique per project so several projects can be debugged at once
+    HARBOR_XDEBUG_SERVER_NAME="${HARBOR_XDEBUG_SERVER_NAME:-$(basename "$PWD")}"
+    export HARBOR_XDEBUG_SERVER_NAME
+
     # set sed command (default if machine not matched)
     if [[ "$MACHINE" == "mac" ]]; then
         SEDCMD=(sed -i .bak)

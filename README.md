@@ -79,6 +79,8 @@ As Harbor 6 uses the same structure as v5, values are introduced and some are mi
 1. Add `HARBOR_DB_EXTERNAL_PORT` and set it according your setup
 2. Remove `HARBOR_DB_TESTING_PORT` as it is not used anymore
 3. Change `HARBOR_DB_CONNECTION=mysql` to `HARBOR_DB_CONNECTION=mariadb`, and also `DB_CONNECTION=mysql` to `DB_CONNECTION=mariadb` in `.env` and `.env.testing`, so Laravel uses its `mariadb` driver
+4. Rename `XDEBUG_SWITCH` to `HARBOR_XDEBUG`. `XDEBUG_SWITCH` is deprecated, but still works as a fallback when `HARBOR_XDEBUG` is not set
+5. Add `HARBOR_TZ=UTC` (optional, see [Timezone](#timezone))
 
 ### From 4 to 5 ###
 
@@ -285,6 +287,26 @@ In this section you can find all commands supported by harbor:
 `harbor create-project laravel` or `harbor new laravel` will install a new Laravel application in the current folder. See harbor installer; it is the recommended way.
 
 `harbor create-project craftable [--dev]` or `harbor new craftable [--dev]` will install a new Craftable application in the current folder. Use `--dev` to set composer minimum-stability to dev before requiring Craftable. See harbor installer; it is the recommended way.
+
+## Timezone ##
+
+The php and php-qa containers default to UTC. To change it (OS time and PHP `date.timezone`), set `HARBOR_TZ` in `.env.harbor`,
+e.g. `HARBOR_TZ=Europe/Bratislava`, and recreate the containers with `harbor up`. Laravel itself still uses `app.timezone`
+from `config/app.php` for its dates.
+
+## Xdebug ##
+
+Xdebug is installed in the php container, but switched off by default. To switch it on, set `HARBOR_XDEBUG=on` in `.env.harbor`
+and recreate the containers with `harbor up`. It stays off for `APP_ENV` production, prod and testing.
+
+Xdebug 3 connects to your machine (`host.docker.internal`) on port `9003` and starts with every request and CLI command.
+In PhpStorm:
+
+1. Settings → PHP → Debug: keep port `9003` in "Debug port".
+2. Settings → PHP → Servers: add a server named after the project folder (the container sends it in `PHP_IDE_CONFIG`,
+   override it with `HARBOR_XDEBUG_SERVER_NAME` in `.env.harbor`), host `localhost`,
+   port of `HARBOR_WEB_PORT`, debugger Xdebug, check "Use path mappings" and map the project root to `/var/www/html`.
+3. Start listening for PHP Debug Connections.
 
 ## SSH keys ##
 
