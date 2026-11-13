@@ -121,3 +121,40 @@ run_scenario() {
 @test "craftable install snapshot (php 8.3)"      { run_scenario craftable-83      craftable -p=8.3; }
 @test "craftable install snapshot (php 8.4)"      { run_scenario craftable-84      craftable -p=8.4; }
 @test "craftable install snapshot (php 8.5)"      { run_scenario craftable-85      craftable -p=8.5; }
+
+# Package manager detection (harbor's detectPackageManager, loaded on its own
+# because sourcing harbor would run main).
+load_detect_package_manager() {
+  eval "$(sed -n '/^detectPackageManager() {$/,/^}$/p' /workspace/harbor)"
+  PM_DIR=$(mktemp -d /workspace/tests/tmp.pm.XXXXXX)
+  cd "$PM_DIR"
+}
+
+@test "package manager: npm with package-lock.json" {
+  load_detect_package_manager
+  echo '{"name":"x"}' > package.json; touch package-lock.json
+  [ "$(detectPackageManager)" = "npm" ]
+}
+
+@test "package manager: npm without package.json" {
+  load_detect_package_manager
+  [ "$(detectPackageManager)" = "npm" ]
+}
+
+@test "package manager: npm when packageManager is npm@" {
+  load_detect_package_manager
+  echo '{"packageManager": "npm@11.6.0"}' > package.json
+  [ "$(detectPackageManager)" = "npm" ]
+}
+
+@test "package manager: pnpm with pnpm-lock.yaml" {
+  load_detect_package_manager
+  echo '{"name":"x"}' > package.json; touch pnpm-lock.yaml
+  [ "$(detectPackageManager)" = "pnpm" ]
+}
+
+@test "package manager: pnpm with packageManager pnpm@ and no lock" {
+  load_detect_package_manager
+  printf '{\n  "name": "x",\n  "packageManager":"pnpm@10.20.0"\n}\n' > package.json
+  [ "$(detectPackageManager)" = "pnpm" ]
+}

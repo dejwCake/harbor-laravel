@@ -206,7 +206,35 @@ If you have an existing laravel / craftable project, and you have not initialize
 
 `harbor init laravel` or `harbor init craftable` 
 
-which will setup some .env variables, install required packages and will run npm. The script will run `npm run build` when present, otherwise `npm run dev`. For Craftable, if `craftable-dev` exists in package.json, it will be executed.
+which will setup some .env variables, install required packages and will run npm or pnpm (see [Package manager](#package-manager-npm--pnpm)). The script will run `npm run build` (`pnpm run build`) when present, otherwise `npm run dev` (`pnpm run dev`). For Craftable, if `craftable-dev` exists in package.json, it will be executed.
+
+## Package manager (npm / pnpm) ##
+
+Harbor detects the package manager per project, so npm and pnpm projects work with the same Harbor version:
+
+- **pnpm** when `pnpm-lock.yaml` exists or the `packageManager` field in `package.json` starts with `pnpm@`,
+- **npm** otherwise.
+
+During init, npm projects run `npm ci || npm install` (`npm install` when there is no `package-lock.json`).
+pnpm projects run `pnpm install --frozen-lockfile || pnpm install` (`pnpm install` when there is no `pnpm-lock.yaml`).
+`harbor create-project craftable` always runs a plain `npm install` / `pnpm install`, because `craftable:install` changes `package.json` without updating the lock file.
+
+pnpm needs a recent `node` image. The image is updated under the same tag, so a cached copy may not have pnpm yet.
+In that case Harbor stops with an error. Pull the image and try again:
+
+```
+docker compose pull node
+```
+
+(`harbor pull` works too, but it pulls all images.)
+
+pnpm projects should keep the pnpm store in the project. The `node` container runs with `--rm`, so the default store in the container's home is thrown away after every run. Add this to `pnpm-workspace.yaml`:
+
+```yaml
+storeDir: .pnpm-store
+```
+
+`.pnpm-store` and `pnpm-debug.log` are added to `.gitignore` for new projects. In an existing project, add them yourself.
 
 ## Starting a harbor (docker) ##
 
@@ -264,9 +292,11 @@ In this section you can find all commands supported by harbor:
 
 `harbor cn` will run composer normalize (php-qa container). All additional arguments are passed to command.
 
-#### NPM container commands ####
+#### Node container commands ####
 
 `harbor npm` will run npm command on node container and pass all additional arguments to npm.
+
+`harbor pnpm` will run pnpm command on node container and pass all additional arguments to pnpm. Each call first checks that the node image has pnpm, see [Package manager](#package-manager-npm--pnpm).
 
 #### DB container commands ####
 

@@ -4,7 +4,7 @@ This project uses Harbor (Docker Compose) for a consistent local dev environment
 
 ## How to develop this project
 
-Use the Harbor commands (or direct docker compose equivalents) below to start services, run PHP/Composer, execute tests, QA tools, NPM tasks, and interact with the database.
+Use the Harbor commands (or direct docker compose equivalents) below to start services, run PHP/Composer, execute tests, QA tools, npm/pnpm tasks, and interact with the database.
 
 ### Tip: quick alias
 

@@ -356,11 +356,43 @@ hasNpmScript() {
     fi
 }
 
+# Print the project's package manager: pnpm when pnpm-lock.yaml exists or the
+# package.json "packageManager" field starts with pnpm@, otherwise npm.
+detectPackageManager() {
+    if [[ -f pnpm-lock.yaml ]] \
+        || grep -qE '"packageManager"[[:space:]]*:[[:space:]]*"pnpm@' package.json 2>/dev/null; then
+        echo "pnpm"
+    else
+        echo "npm"
+    fi
+}
+
+# Stop with a clear message when the node image predates pnpm (the image is
+# updated under the same tag, so a cached copy may still lack it). Checked once
+# per harbor run tree: the exported flag lets nested ./harbor pnpm calls skip it.
+ensurePnpm() {
+    [[ "${HARBOR_PNPM_CHECKED:-}" == "1" ]] && return 0
+
+    if ! "${COMPOSE[@]}" run --rm node sh -c 'command -v pnpm' >/dev/null 2>&1; then
+        echo "pnpm is not available in the node container, your node image is outdated." >&2
+        echo "Pull the latest one with 'docker compose pull node' (or './harbor pull') and try again." >&2
+        return 1
+    fi
+
+    export HARBOR_PNPM_CHECKED=1
+}
+
 # initNpm [forceInstall]
 initNpm() {
     local forceInstall="${1:-}"
+    local pm
+    pm="$(detectPackageManager)"
 
-    echo "Npm ..."
+    if [[ "$pm" == "pnpm" ]]; then
+        echo "Pnpm ..."
+    else
+        echo "Npm ..."
+    fi
 
     # Verify package.json exists before installing
     if [[ ! -f package.json ]]; then
@@ -368,7 +400,14 @@ initNpm() {
         return 0
     fi
 
-    if [[ -z "$forceInstall" && -f package-lock.json ]]; then
+    if [[ "$pm" == "pnpm" ]]; then
+        ensurePnpm || return 1
+        if [[ -z "$forceInstall" && -f pnpm-lock.yaml ]]; then
+            ./harbor pnpm install --frozen-lockfile || ./harbor pnpm install
+        else
+            ./harbor pnpm install
+        fi
+    elif [[ -z "$forceInstall" && -f package-lock.json ]]; then
         ./harbor npm ci || ./harbor npm install
     else
         ./harbor npm install
@@ -376,22 +415,23 @@ initNpm() {
 
     # Build if script exists; fallback to dev if build is missing
     if hasNpmScript "build"; then
-        ./harbor npm run build
+        ./harbor "$pm" run build
     elif hasNpmScript "dev"; then
-        ./harbor npm run dev
+        ./harbor "$pm" run dev
     else
         echo "No build/dev script found in package.json, skipping build step."
     fi
 }
 
 initNpmCraftable() {
-    # Force `npm install`: craftable:install added deps to package.json without
-    # updating the starter kit's lock, so `npm ci` would always fail here.
+    # Force `npm install` / `pnpm install`: craftable:install added deps to
+    # package.json without updating the starter kit's lock, so `npm ci` /
+    # `pnpm install --frozen-lockfile` would always fail here.
     initNpm install
 
     # Run craftable-dev only if script exists
     if hasNpmScript "craftable-dev"; then
-        ./harbor npm run craftable-dev
+        ./harbor "$(detectPackageManager)" run craftable-dev
     else
         echo "No craftable-dev script found in package.json, skipping."
     fi
@@ -635,6 +675,8 @@ ensureGitignoreEntries() {
         ".phpstan.cache"
         "docker-compose.override.yml"
         "npm-debug.log"
+        "pnpm-debug.log"
+        ".pnpm-store"
         "yarn-error.log"
     )
 
@@ -850,6 +892,7 @@ Harbor commands:
   composer|comp [args]     - run composer [args] in php container
   test [args]              - run phpunit
   npm [args]               - run npm in node container
+  pnpm [args]              - run pnpm in node container
   db [args]                - run psql/mysql in db container
   dump [args]              - run pg_dump/mysqldump in db container
   ssh <service> [root]     - bash into service (php defaults to user 'harbor' unless 'root')
@@ -1027,7 +1070,7 @@ main() {
             ;;
 
         #
-        # NPM container commands
+        # Node container commands (npm, pnpm)
         #
 
         # If "npm" is used, run npm from our node container
@@ -1036,6 +1079,15 @@ main() {
             "${COMPOSE[@]}" run --rm \
                 node \
                 npm "$@"
+            ;;
+
+        # If "pnpm" is used, run pnpm from our node container
+        pnpm)
+            shift 1
+            ensurePnpm || exit 1
+            "${COMPOSE[@]}" run --rm \
+                node \
+                pnpm "$@"
             ;;
 
         #
